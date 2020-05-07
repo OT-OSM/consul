@@ -1,0 +1,5 @@
+ansible-playbook -i inventory/server/inventory server.yml --ssh-common-args='-o StrictHostKeyChecking=no'
+
+ansible-playbook -i inventory/agent/inventory agent.yml --ssh-common-args='-o StrictHostKeyChecking=no'
+
+ansible-playbook -i inventory/agent/inventory amd.yml --ssh-common-args='-o StrictHostKeyChecking=no'

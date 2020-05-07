@@ -1,0 +1,20 @@
+[consul-servers]
+server1 ansible_host=52.234.148.178 ansible_connection=ssh ansible_user=sks
+server2 ansible_host=104.41.151.17 ansible_connection=ssh ansible_user=sks
+server3 ansible_host=104.41.151.121 ansible_connection=ssh ansible_user=sks
+
+[ui-server]
+server1 ansible_host=52.234.148.178 ansible_connection=ssh ansible_user=sks
+
+[non-ui-servers]
+server2 ansible_host=104.41.151.17 ansible_connection=ssh ansible_user=sks
+server3 ansible_host=104.41.151.121 ansible_connection=ssh ansible_user=sks
+
+[server1]
+server1 ansible_host=52.234.148.178 ansible_connection=ssh ansible_user=sks
+
+[server2]
+server2 ansible_host=104.41.151.17 ansible_connection=ssh ansible_user=sks
+
+[server3]
+server3 ansible_host=104.41.151.121 ansible_connection=ssh ansible_user=sks

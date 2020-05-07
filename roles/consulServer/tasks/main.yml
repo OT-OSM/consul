@@ -1,0 +1,239 @@
+- name: Installing Unzip
+  apt:
+    name: unzip
+    state: present
+
+- name: Downloading consul binary
+  get_url:
+    url: https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
+    dest: /usr/local/bin/
+    mode: '0440'
+  register: consul_download_result
+
+- name: Extracting and then removing the zip file
+  shell: |
+    cd /usr/local/bin/
+    rm -rf consul
+    unzip *.zip
+    rm *.zip
+    chown root:root consul
+  when: consul_download_result is succeeded
+
+- name: Adding a non-privileged user 'consul' with no shell
+  user:
+    name: consul
+    home: /etc/consul.d
+    shell: /bin/false
+
+
+- name: Creating directories for consul persistent storage
+  file:
+    path: /opt/consul/
+    state: directory
+    owner: consul
+    group: consul
+
+- name: Creating a Consul service file
+  copy:
+    dest: "/etc/systemd/system/consul.service"
+    content: |
+        [Unit]
+        Description="HashiCorp Consul - A service mesh solution"
+        Documentation=https://www.consul.io/
+        Requires=network-online.target
+        After=network-online.target
+        ConditionFileNotEmpty=/etc/consul.d/consul.hcl
+        
+        [Service]
+        Type=notify
+        User=consul
+        Group=consul
+        ExecStart=/usr/local/bin/consul agent -config-dir=/etc/consul.d/
+        ExecReload=/usr/local/bin/consul reload
+        KillMode=process
+        Restart=on-failure
+        LimitNOFILE=65536
+        
+        [Install]
+        WantedBy=multi-user.target
+
+- name: Creating consul.hcl file for server1
+  when: inventory_hostname in groups['server1']
+  copy:
+    dest: "/etc/consul.d/consul.hcl"
+    owner: consul
+    group: consul
+    mode: '0640'
+    content: |
+        datacenter = "dc1"
+        data_dir = "/opt/consul"
+        encrypt = "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA="
+        retry_join = ["10.0.0.7", "10.0.0.8"]
+        performance {
+            raft_multiplier = 1
+        }
+
+- name: Creating consul.hcl file for server2
+  when: inventory_hostname in groups['server2']
+  copy:
+    dest: "/etc/consul.d/consul.hcl"
+    owner: consul
+    group: consul
+    mode: '0640'
+    content: |
+        datacenter = "dc1"
+        data_dir = "/opt/consul"
+        encrypt = "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA="
+        retry_join = ["10.0.0.4", "10.0.0.8"]
+        performance {
+            raft_multiplier = 1
+        }
+
+- name: Creating consul.hcl file for server3
+  when: inventory_hostname in groups['server3']
+  copy:
+    dest: "/etc/consul.d/consul.hcl"
+    owner: consul
+    group: consul
+    mode: '0640'
+    content: |
+        datacenter = "dc1"
+        data_dir = "/opt/consul"
+        encrypt = "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA="
+        retry_join = ["10.0.0.4", "10.0.0.7"]
+        performance {
+            raft_multiplier = 1
+        }
+
+- name: Creating a server.hcl file for ui-server
+  when: inventory_hostname in groups['ui-server']
+  copy:
+    dest: "/etc/consul.d/server.hcl"
+    owner: consul
+    group: consul
+    mode: '0640'
+    content: |
+        server = true
+        bootstrap_expect = 3
+        ui = true
+
+- name: Creating a server.hcl file for non-ui-servers
+  when: inventory_hostname in groups['non-ui-servers']
+  copy:
+    dest: "/etc/consul.d/server.hcl"
+    owner: consul
+    group: consul
+    mode: '0640'
+    content: |
+        server = true
+        bootstrap_expect = 3
+
+- name: Enabling and starting consul
+  shell: |
+    set timeout 600
+    systemctl enable consul
+    systemctl restart consul
+
+- name: Installing Nginx Web-server
+  when: inventory_hostname in groups['ui-server']
+  apt:
+    name: nginx
+    state: present
+  register: ngnix_install
+
+- name: Creating a proxy to ui-server
+  when: inventory_hostname in groups['ui-server'] and ngnix_install is succeeded
+  copy:
+    dest: "/etc/nginx/sites-available/default"
+    content: |
+        server {
+            listen 80;
+            listen [::]:80;
+
+            access_log /var/log/nginx/reverse-access.log;
+            error_log /var/log/nginx/reverse-error.log;
+
+            location / {
+                proxy_pass http://127.0.0.1:8500;
+            }
+        }
+
+- name: Starting nginx server
+  when: inventory_hostname in groups['ui-server']
+  shell: |
+    systemctl reload nginx.service
+
+
+
+#########################################################################################
+# - name: Creating configuration directories
+#   file:
+#     path: "{{ item }}"
+#     state: directory
+#   with_items:
+#     - /etc/consul.d/bootstrap
+#     - /etc/consul.d/server
+#     - /etc/consul.d/client
+#
+# - name: Creating file for bootstrap configuration
+#   when: inventory_hostname in groups['bootstrap-servers']
+#   copy:
+#     dest: "/etc/consul.d/bootstrap/config.json"
+#     content: |
+#        {
+#            "bootstrap": true,
+#            "server": true,
+#            "datacenter": "dc1",
+#            "data_dir": "/var/consul",
+#            "encrypt": "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA=",
+#            "log_level": "INFO",
+#            "enable_syslog": true
+#        }
+#
+# - name: Creating file for server1 configuration
+#   when: inventory_hostname in groups['server1']
+#   copy:
+#     dest: "/etc/consul.d/server/config.json"
+#     content: |
+#        {
+#            "bootstrap": false,
+#            "server": true,
+#            "datacenter": "dc1",
+#            "data_dir": "/var/consul",
+#            "encrypt": "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA=",
+#            "log_level": "INFO",
+#            "enable_syslog": true,
+#            "start_join": ["10.0.0.7", "10.0.0.8"]
+#        }
+#
+# - name: Creating file for server2 configuration
+#   when: inventory_hostname in groups['server2']
+#   copy:
+#     dest: "/etc/consul.d/server/config.json"
+#     content: |
+#        {
+#            "bootstrap": false,
+#            "server": true,
+#            "datacenter": "dc1",
+#            "data_dir": "/var/consul",
+#            "encrypt": "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA=",
+#            "log_level": "INFO",
+#            "enable_syslog": true,
+#            "start_join": ["10.0.0.4", "10.0.0.8"]
+#        }
+#
+# - name: Creating file for server3 configuration
+#   when: inventory_hostname in groups['server3']
+#   copy:
+#     dest: "/etc/consul.d/server/config.json"
+#     content: |
+#        {
+#            "bootstrap": false,
+#            "server": true,
+#            "datacenter": "DC-1",
+#            "data_dir": "/var/consul",
+#            "encrypt": "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA=",
+#            "log_level": "INFO",
+#            "enable_syslog": true,
+#            "start_join": ["10.0.0.4", "10.0.0.7"]
+#        }
