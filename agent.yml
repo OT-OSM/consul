@@ -1,5 +1,7 @@
 ---
 - hosts: all
+  vars:
+    priv_ip: [10.0.0.4]
   become: yes
   become_user: root
   gather_facts: yes

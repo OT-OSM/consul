@@ -67,7 +67,7 @@
         datacenter = "dc1"
         data_dir = "/opt/consul"
         encrypt = "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA="
-        retry_join = ["10.0.0.4"]
+        retry_join = ["{{ priv_ip[0] }}"]
         performance {
             raft_multiplier = 1
         }
