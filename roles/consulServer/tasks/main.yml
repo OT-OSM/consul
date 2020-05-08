@@ -58,7 +58,7 @@
         WantedBy=multi-user.target
 
 - name: Creating consul.hcl file for server1
-  when: inventory_hostname in groups['server1']
+  when: "ansible_default_ipv4.address == ip_list.split(',')[0]"
   copy:
     dest: "/etc/consul.d/consul.hcl"
     owner: consul
@@ -68,13 +68,13 @@
         datacenter = "dc1"
         data_dir = "/opt/consul"
         encrypt = "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA="
-        retry_join = ["{{ priv_ip[1] }}", "{{ priv_ip[2] }}"]
+        retry_join = ["{{ ip_list.split(",")[1] }}", "{{ ip_list.split(",")[2] }}"]
         performance {
             raft_multiplier = 1
         }
 
 - name: Creating consul.hcl file for server2
-  when: inventory_hostname in groups['server2']
+  when: "ansible_default_ipv4.address == ip_list.split(',')[1]"
   copy:
     dest: "/etc/consul.d/consul.hcl"
     owner: consul
@@ -84,13 +84,13 @@
         datacenter = "dc1"
         data_dir = "/opt/consul"
         encrypt = "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA="
-        retry_join = ["{{ priv_ip[0] }}", "{{ priv_ip[2] }}"]
+        retry_join = ["{{ ip_list.split(",")[0] }}", "{{ ip_list.split(",")[2] }}"]
         performance {
             raft_multiplier = 1
         }
 
 - name: Creating consul.hcl file for server3
-  when: inventory_hostname in groups['server3']
+  when: "ansible_default_ipv4.address == ip_list.split(',')[2]"
   copy:
     dest: "/etc/consul.d/consul.hcl"
     owner: consul
@@ -100,25 +100,12 @@
         datacenter = "dc1"
         data_dir = "/opt/consul"
         encrypt = "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA="
-        retry_join = ["{{ priv_ip[0] }}", "{{ priv_ip[1] }}"]
+        retry_join = ["{{ ip_list.split(",")[0] }}", "{{ ip_list.split(",")[1] }}"]
         performance {
             raft_multiplier = 1
         }
 
-- name: Creating a server.hcl file for ui-server
-  when: inventory_hostname in groups['ui-server']
-  copy:
-    dest: "/etc/consul.d/server.hcl"
-    owner: consul
-    group: consul
-    mode: '0640'
-    content: |
-        server = true
-        bootstrap_expect = 3
-        ui = true
-
-- name: Creating a server.hcl file for non-ui-servers
-  when: inventory_hostname in groups['non-ui-servers']
+- name: Creating server.hcl file
   copy:
     dest: "/etc/consul.d/server.hcl"
     owner: consul
@@ -133,107 +120,3 @@
     set timeout 600
     systemctl enable consul
     systemctl restart consul
-
-- name: Installing Nginx Web-server
-  when: inventory_hostname in groups['ui-server']
-  apt:
-    name: nginx
-    state: present
-  register: ngnix_install
-
-- name: Creating a proxy to ui-server
-  when: inventory_hostname in groups['ui-server'] and ngnix_install is succeeded
-  copy:
-    dest: "/etc/nginx/sites-available/default"
-    content: |
-        server {
-            listen 80;
-            listen [::]:80;
-
-            access_log /var/log/nginx/reverse-access.log;
-            error_log /var/log/nginx/reverse-error.log;
-
-            location / {
-                proxy_pass http://127.0.0.1:8500;
-            }
-        }
-
-- name: Starting nginx server
-  when: inventory_hostname in groups['ui-server']
-  shell: |
-    systemctl reload nginx.service
-
-
-
-#########################################################################################
-# - name: Creating configuration directories
-#   file:
-#     path: "{{ item }}"
-#     state: directory
-#   with_items:
-#     - /etc/consul.d/bootstrap
-#     - /etc/consul.d/server
-#     - /etc/consul.d/client
-#
-# - name: Creating file for bootstrap configuration
-#   when: inventory_hostname in groups['bootstrap-servers']
-#   copy:
-#     dest: "/etc/consul.d/bootstrap/config.json"
-#     content: |
-#        {
-#            "bootstrap": true,
-#            "server": true,
-#            "datacenter": "dc1",
-#            "data_dir": "/var/consul",
-#            "encrypt": "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA=",
-#            "log_level": "INFO",
-#            "enable_syslog": true
-#        }
-#
-# - name: Creating file for server1 configuration
-#   when: inventory_hostname in groups['server1']
-#   copy:
-#     dest: "/etc/consul.d/server/config.json"
-#     content: |
-#        {
-#            "bootstrap": false,
-#            "server": true,
-#            "datacenter": "dc1",
-#            "data_dir": "/var/consul",
-#            "encrypt": "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA=",
-#            "log_level": "INFO",
-#            "enable_syslog": true,
-#            "start_join": ["10.0.0.7", "10.0.0.8"]
-#        }
-#
-# - name: Creating file for server2 configuration
-#   when: inventory_hostname in groups['server2']
-#   copy:
-#     dest: "/etc/consul.d/server/config.json"
-#     content: |
-#        {
-#            "bootstrap": false,
-#            "server": true,
-#            "datacenter": "dc1",
-#            "data_dir": "/var/consul",
-#            "encrypt": "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA=",
-#            "log_level": "INFO",
-#            "enable_syslog": true,
-#            "start_join": ["10.0.0.4", "10.0.0.8"]
-#        }
-#
-# - name: Creating file for server3 configuration
-#   when: inventory_hostname in groups['server3']
-#   copy:
-#     dest: "/etc/consul.d/server/config.json"
-#     content: |
-#        {
-#            "bootstrap": false,
-#            "server": true,
-#            "datacenter": "DC-1",
-#            "data_dir": "/var/consul",
-#            "encrypt": "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA=",
-#            "log_level": "INFO",
-#            "enable_syslog": true,
-#            "start_join": ["10.0.0.4", "10.0.0.7"]
-#        }
