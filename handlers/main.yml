@@ -1,0 +1,17 @@
+---
+-   name: daemon_reload
+    systemd:
+        daemon_reload: true
+
+-   name: Enabling and Restarting consul
+    shell: |
+        set timeout 600
+        systemctl enable consul
+        systemctl restart consul
+
+-   name: restart_consul
+    service:
+        name: consul
+        enabled: true
+        state: restarted
+...

@@ -1,0 +1,17 @@
+- name: Creating consul.hcl file for server1
+  when: "ansible_default_ipv4.address == ip_list.split(',')[0]"
+  template:
+    src: consul-hcl1-cluster.j2
+    dest: "{{ consul_hcl_dest }}"
+
+- name: Creating consul.hcl file for server2
+  when: "ansible_default_ipv4.address == ip_list.split(',')[1]"
+  template:
+    src: consul-hcl2-cluster.j2
+    dest: "{{ consul_hcl_dest }}"
+
+- name: Creating consul.hcl file for server3
+  when: "ansible_default_ipv4.address == ip_list.split(',')[2]"
+  template:
+    src: consul-hcl3-cluster.j2
+    dest: "{{ consul_hcl_dest }}"

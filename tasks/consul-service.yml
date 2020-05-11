@@ -1,0 +1,5 @@
+- name: Creating a Consul service file
+  template:
+    src: consul-service.j2
+    dest: "{{ consul_service_file }}"
+

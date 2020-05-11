@@ -1,0 +1,16 @@
+- name: Installing python-pip
+  apt:
+    name: python-pip
+    state: present
+
+- name: Installing python-consul with pip
+  pip:
+    name: python-consul
+    state: present
+
+- name: Register nginx with an http check
+  consul:
+    service_name: nginx
+    service_port: 80
+    interval: 60s
+    http: http://localhost:80/

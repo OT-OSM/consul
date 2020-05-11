@@ -2,6 +2,8 @@
   apt:
     name: unzip
     state: present
+  tags: 
+    - common
 
 - name: Downloading consul binary
   get_url:
@@ -9,6 +11,8 @@
     dest: /usr/local/bin/
     mode: '0440'
   register: consul_download_result
+  tags: 
+    - common
 
 - name: Extracting and then removing the zip file
   shell: |
@@ -18,12 +22,16 @@
     rm *.zip
     chown root:root consul
   when: consul_download_result is succeeded
+  tags: 
+    - common
 
 - name: Adding a non-privileged user 'consul' with no shell
   user:
     name: consul
     home: /etc/consul.d
     shell: /bin/false
+  tags: 
+    - common
 
 
 - name: Creating directories for consul persistent storage
@@ -32,6 +40,8 @@
     state: directory
     owner: consul
     group: consul
+  tags: 
+    - common
 
 - name: Creating a Consul service file
   copy:
@@ -56,6 +66,8 @@
         
         [Install]
         WantedBy=multi-user.target
+  tags: 
+    - common
 
 - name: Creating consul.hcl file for server1
   when: "ansible_default_ipv4.address == ip_list.split(',')[0]"
@@ -72,6 +84,8 @@
         performance {
             raft_multiplier = 1
         }
+  tags: 
+    - consul-cluster
 
 - name: Creating consul.hcl file for server2
   when: "ansible_default_ipv4.address == ip_list.split(',')[1]"
@@ -88,6 +102,8 @@
         performance {
             raft_multiplier = 1
         }
+  tags: 
+    - consul-cluster
 
 - name: Creating consul.hcl file for server3
   when: "ansible_default_ipv4.address == ip_list.split(',')[2]"
@@ -104,6 +120,26 @@
         performance {
             raft_multiplier = 1
         }
+  tags: 
+    - consul-cluster
+
+- name: Creating consul.hcl file
+  copy:
+    dest: "/etc/consul.d/consul.hcl"
+    owner: consul
+    group: consul
+    mode: '0640'
+    content: |
+        datacenter = "dc1"
+        data_dir = "/opt/consul"
+        encrypt = "sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA="
+        retry_join = ["{{ cluster_to_join }}"]
+        performance {
+            raft_multiplier = 1
+        }
+  tags: 
+    - consul-client
+    - consul-server
 
 - name: Creating server.hcl file
   copy:
@@ -114,9 +150,14 @@
     content: |
         server = true
         bootstrap_expect = 3
+  tags: 
+    - consul-cluster
+    - consul-server
 
 - name: Enabling and starting consul
   shell: |
     set timeout 600
     systemctl enable consul
     systemctl restart consul
+  tags: 
+    - common

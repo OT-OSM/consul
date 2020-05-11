@@ -1,0 +1,12 @@
+- name: Adding a non-privileged user 'consul' with no shell
+  user:
+    name: consul
+    home: "{{ consul_user_home }}"
+    shell: "{{ consul_user_shell }}"
+
+- name: Creating directories for consul persistent storage
+  file:
+    path: "{{ consul_data_dir }}"
+    state: directory
+    owner: "{{ consul_owner }}"
+    group: "{{ consul_group }}"

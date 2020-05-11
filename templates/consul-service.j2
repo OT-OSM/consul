@@ -1,0 +1,19 @@
+[Unit]
+Description="{{ description }}"
+Documentation={{ documentation }}
+Requires={{ requires }}
+After={{ after }}
+ConditionFileNotEmpty={{ cond_file_not_empty }}
+
+[Service]
+Type={{ type }}
+User={{ consul_owner }}
+Group={{ consul_group }}
+ExecStart={{ exec_start }}
+ExecReload={{ exec_reload }}
+KillMode={{ kill_mode }}
+Restart={{ restart }}
+LimitNOFILE={{ limit_file }}
+
+[Install]
+WantedBy={{ wanted_by }}

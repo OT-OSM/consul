@@ -1,0 +1,10 @@
+-   name: Creating server.hcl file
+    copy:
+        dest: "{{ server_hcl_dest }}"
+        owner: "{{ consul_owner }}"
+        group: "{{ consul_group }}"
+        mode: "{{ server_hcl_mode }}"
+        content: |
+            server = true
+            bootstrap_expect = 3
+            

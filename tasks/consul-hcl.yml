@@ -1,0 +1,5 @@
+- name: Creating consul.hcl file
+  template:
+    src: consul-hcl.j2
+    dest: "{{ consul_hcl_dest }}"
+

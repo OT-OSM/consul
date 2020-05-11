@@ -1,0 +1,65 @@
+---
+-   name: Including file for unzip
+    include: unzip.yml
+    tags:
+        - consul-cluster
+        - consul-server
+        - consul-client        
+
+-   name: Including file for consul binary
+    include: consul-binary.yml
+    tags:
+        - consul-cluster
+        - consul-server
+        - consul-client       
+
+-   name: Including file for consul user
+    include: consul-user.yml
+    tags:
+        - consul-cluster
+        - consul-server
+        - consul-client      
+
+-   name: Including file for consul service
+    include: consul-service.yml
+    tags:
+        - consul-cluster
+        - consul-server
+        - consul-client    
+
+-   name: Including file for consul hcl for cluster
+    include: consul-hcl-3node-cluster.yml
+    tags:
+        - consul-cluster    
+
+-   name: Including file for consul hcl
+    include: consul-hcl.yml
+    tags:
+        - consul-server
+        - consul-client
+
+-   name: Including file for server hcl for cluster
+    include: server-hcl-cluster.yml
+    tags:
+        - consul-cluster   
+
+-   name: Including file for server hcl
+    include: server-hcl.yml
+    tags:
+        - consul-server   
+
+-   name: Including file for registering and modifying services in consul-agent
+    include: amd.yml
+    tags:
+        - consul-amd
+
+-   name: Reloading systemd and restarting consul
+    command: /bin/true
+    notify: 
+        - daemon_reload
+        - restart_consul
+    tags:
+        - consul-cluster
+        - consul-server
+        - consul-client
+        - consul-amd
