@@ -1,17 +1,18 @@
 ---
--   name: Including file for unzip
-    include: unzip.yml
-    tags:
-        - consul-cluster
-        - consul-server
-        - consul-client        
-
 -   name: Including file for consul binary
     include: consul-binary.yml
     tags:
         - consul-cluster
         - consul-server
-        - consul-client       
+        - consul-client     
+
+-   name: Executing command to generate encrypt key
+    when: "ansible_default_ipv4.address == ip_list.split(',')[0]"
+    command: consul keygen
+    run_once: true
+    register: key_encrypt
+    tags:
+        - consul-cluster
 
 -   name: Including file for consul user
     include: consul-user.yml
@@ -20,8 +21,10 @@
         - consul-server
         - consul-client      
 
--   name: Including file for consul service
-    include: consul-service.yml
+- name: Creating a Consul service file
+  template:
+    src: consul-service.j2
+    dest: "{{ consul_service_file }}"
     tags:
         - consul-cluster
         - consul-server
@@ -32,19 +35,31 @@
     tags:
         - consul-cluster    
 
--   name: Including file for consul hcl
-    include: consul-hcl.yml
+- name: Creating consul.hcl file
+  template:
+    src: consul-hcl.j2
+    dest: "{{ consul_hcl_dest }}"
     tags:
         - consul-server
         - consul-client
 
--   name: Including file for server hcl for cluster
-    include: server-hcl-cluster.yml
+-   name: Creating server.hcl file
+    template:
+        src: server-hcl-cluster.j2
+        dest: "{{ server_hcl_dest }}"
+        owner: "{{ consul_owner }}"
+        group: "{{ consul_group }}"
+        mode: "{{ server_hcl_mode }}"
     tags:
         - consul-cluster   
 
--   name: Including file for server hcl
-    include: server-hcl.yml
+-   name: Creating server.hcl file
+    template:
+        src: server-hcl.j2
+        dest: "{{ server_hcl_dest }}"
+        owner: "{{ consul_owner }}"
+        group: "{{ consul_group }}"
+        mode: "{{ server_hcl_mode }}"
     tags:
         - consul-server   
 

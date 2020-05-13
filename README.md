@@ -11,7 +11,6 @@ ansible-playbook -i inventory cluster.yml -t consul-cluster --ssh-common-args='-
 ```
 ```hcl
 ---
-### cluster.yml
 -   hosts: [consul-cluster]
     become: yes
     become_user: root
@@ -26,7 +25,6 @@ ansible-playbook -i inventory client.yml -t consul-client --ssh-common-args='-o 
 ```
 ```hcl
 ---
-### client.yml
 -   hosts: [consul-clients]
     become: yes
     become_user: root
@@ -41,7 +39,6 @@ ansible-playbook -i inventory server.yml -t consul-server --ssh-common-args='-o 
 ```
 ```hcl
 ---
-### server.yml
 -   hosts: [consul-servers]
     become: yes
     become_user: root
@@ -49,21 +46,6 @@ ansible-playbook -i inventory server.yml -t consul-server --ssh-common-args='-o 
     tasks:
         - import_role:
             name: ./osm_consul   ## you can give absolute or relative path to osm_consul
-```
-### For Adding Modifying and Deleting services to local consul agent ###
-```hcl
-ansible-playbook -i inventory amd.yml -t consul-amd --ssh-common-args='-o StrictHostKeyChecking=no'
-```
-```hcl
----
-### amd.yml
--   hosts: [consul-amd]
-    become: yes
-    become_user: root
-    gather_facts: yes
-    tasks:
-        - import_role:
-            name: ./osm_consul
 ```
 ### Your inventory should look like below
 ```hcl
@@ -79,8 +61,8 @@ client ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
 [consul-servers]
 server ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
 ---
-
-[consul-amd]
-server ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
----
+```
+### For Adding Modifying and Deleting services to local consul agent ###
+```hcl
+ansible-playbook -i inventory -t consul-amd --ssh-common-args='-o StrictHostKeyChecking=no'
 ```
