@@ -1,4 +1,3 @@
 ---
 priv_ip: "{{ ansible_default_ipv4.address }}"
 server_name: "{{ inventory_hostname }}"
-ip_list: "{{ groups['consul-cluster'] | map('extract', hostvars, ['ansible_eth0', 'ipv4', 'address']) | join(',') }}"

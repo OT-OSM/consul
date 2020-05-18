@@ -1,58 +1,78 @@
 ---
+-   name: Checking consul version if exists
+    command: consul --version
+    run_once: true
+    register: con_ver
+    tags:
+        - consul-server
+        - consul-client
+        - consul-leader-server
+
+-   name: consul --version
+    when: "con_ver.stdout_lines[0] == consul_version"
+    debug:
+        msg: "{{ con_ver.stdout_lines[0] }} already exists."
+    tags:
+        - consul-server
+        - consul-client
+        - consul-leader-server
+
 -   name: Including file for consul binary
+    when: "con_ver.stdout_lines[0] != consul_version"
     include: consul-binary.yml
     tags:
-        - consul-cluster
         - consul-server
-        - consul-client     
+        - consul-client
+        - consul-leader-server     
 
 -   name: Executing command to generate encrypt key
-    when: "ansible_default_ipv4.address == ip_list.split(',')[0]"
     command: consul keygen
     run_once: true
     register: key_encrypt
     tags:
-        - consul-cluster
+        - consul-leader-server
 
 -   name: Including file for consul user
     include: consul-user.yml
     tags:
-        - consul-cluster
         - consul-server
-        - consul-client      
+        - consul-client
+        - consul-leader-server
 
-- name: Creating a Consul service file
-  template:
-    src: consul-service.j2
-    dest: "{{ consul_service_file }}"
+-   name: Creating a Consul service file
+    template:
+        src: consul-service.j2
+        dest: "{{ consul_service_file }}"
     tags:
-        - consul-cluster
         - consul-server
-        - consul-client    
+        - consul-client
+        - consul-leader-server 
 
--   name: Including file for consul hcl for cluster
-    include: consul-hcl-3node-cluster.yml
+-   name: Creating consul.hcl file
+    template:
+        src: consul-hcl-leader.j2
+        dest: "{{ consul_hcl_dest }}"
     tags:
-        - consul-cluster    
+        - consul-leader-server
 
-- name: Creating consul.hcl file
-  template:
-    src: consul-hcl.j2
-    dest: "{{ consul_hcl_dest }}"
+-   name: Creating consul.hcl file
+    template:
+        src: consul-hcl.j2
+        dest: "{{ consul_hcl_dest }}"
     tags:
         - consul-server
         - consul-client
 
 -   name: Creating server.hcl file
     template:
-        src: server-hcl-cluster.j2
+        src: server-hcl-leader.j2
         dest: "{{ server_hcl_dest }}"
         owner: "{{ consul_owner }}"
         group: "{{ consul_group }}"
         mode: "{{ server_hcl_mode }}"
     tags:
-        - consul-cluster   
-
+        - consul-leader-server
+           
 -   name: Creating server.hcl file
     template:
         src: server-hcl.j2
@@ -61,7 +81,7 @@
         group: "{{ consul_group }}"
         mode: "{{ server_hcl_mode }}"
     tags:
-        - consul-server   
+        - consul-server
 
 -   name: Including file for registering and modifying services in consul-agent
     include: amd.yml
@@ -74,7 +94,7 @@
         - daemon_reload
         - restart_consul
     tags:
-        - consul-cluster
         - consul-server
         - consul-client
         - consul-amd
+        - consul-leader-server

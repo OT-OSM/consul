@@ -1,7 +1,0 @@
-datacenter = "{{ datacenter }}"
-data_dir = "{{ consul_data_dir }}"
-encrypt = "{{ key_encrypt.stdout }}"
-retry_join = ["{{ ip_list.split(",")[0] }}", "{{ ip_list.split(",")[1] }}"]
-performance {
-    raft_multiplier = {{ raft_mul }}
-}

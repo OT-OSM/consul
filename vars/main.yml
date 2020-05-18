@@ -1,44 +1,46 @@
 ---
-member_cluster_to_join: "10.0.0.4"
-
-# consul binary
-consul_binary_url: https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
-consul_binary_dir: /usr/local/bin
-consul_binary_perm: 0440
-consul_binary_owner: root
-consul_binary_group: root
-
-# consul user
-consul_user_home: /etc/consul.d
-consul_user_shell: /bin/false
-
-# consul persistent storage
-consul_data_dir: /opt/consul
-consul_owner: consul
-consul_group: consul
-
-# consul-service file
-consul_service_file: /etc/systemd/system/consul.service
-description: HashiCorp Consul - A service mesh solution
-documentation: https://www.consul.io/
-requires: network-online.target
-after: network-online.target
-cond_file_not_empty: /etc/consul.d/consul.hcl
-type: notify
-exec_start: /usr/local/bin/consul agent -config-dir=/etc/consul.d/
-exec_reload: /usr/local/bin/consul reload
-kill_mode: process
-restart: on-failure
-limit_file: 65536
-wanted_by: multi-user.target
-
-# consul-hcl file
-consul_hcl_dest: /etc/consul.d/consul.hcl
-consul_hcl_mode: 0640
-datacenter: dc1
-encrypt_key: sH0yrNhlGMoonafcfmNPr6kkHq/rXb0XhUbE4IUrfvA=
-raft_mul: 1
-
-# server-hcl file
-server_hcl_dest: /etc/consul.d/server.hcl
-server_hcl_mode: 0640
+    # enter details of the leader server
+    leader_priv_ip: "172.31.81.239"
+    encrypt_key: gUX7DRRApx9PokdtZfLiuQPKGb1vRWBEqGORCjPzv/U=
+    
+    # consul binary
+    consul_binary_url: https://releases.hashicorp.com/consul/1.7.3/consul_1.7.3_linux_amd64.zip
+    consul_version: Consul v1.7.3
+    consul_binary_dir: /usr/local/bin
+    consul_binary_perm: 0440
+    consul_binary_owner: root
+    consul_binary_group: root
+    
+    # consul user
+    consul_user_home: /etc/consul.d
+    consul_user_shell: /bin/false
+    
+    # consul persistent storage
+    consul_data_dir: /opt/consul
+    consul_owner: consul
+    consul_group: consul
+    
+    # consul-service file
+    consul_service_file: /etc/systemd/system/consul.service
+    description: HashiCorp Consul - A service mesh solution
+    documentation: https://www.consul.io/
+    requires: network-online.target
+    after: network-online.target
+    cond_file_not_empty: /etc/consul.d/consul.hcl
+    type: notify
+    exec_start: /usr/local/bin/consul agent -config-dir=/etc/consul.d/
+    exec_reload: /usr/local/bin/consul reload
+    kill_mode: process
+    restart: on-failure
+    limit_file: 65536
+    wanted_by: multi-user.target
+    
+    # consul-hcl file
+    consul_hcl_dest: /etc/consul.d/consul.hcl
+    consul_hcl_mode: 0640
+    datacenter: dc1
+    raft_mul: 1
+    
+    # server-hcl file
+    server_hcl_dest: /etc/consul.d/server.hcl
+    server_hcl_mode: 0640

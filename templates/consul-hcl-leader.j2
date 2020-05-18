@@ -1,7 +1,7 @@
 datacenter = "{{ datacenter }}"
 data_dir = "{{ consul_data_dir }}"
 encrypt = "{{ key_encrypt.stdout }}"
-retry_join = ["{{ ip_list.split(",")[0] }}", "{{ ip_list.split(",")[2] }}"]
+retry_join = ["{{ ansible_default_ipv4.address }}"]
 performance {
     raft_multiplier = {{ raft_mul }}
 }

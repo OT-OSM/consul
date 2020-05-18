@@ -1,7 +1,7 @@
 datacenter = "{{ datacenter }}"
 data_dir = "{{ consul_data_dir }}"
 encrypt = "{{ encrypt_key }}"
-retry_join = ["{{ member_cluster_to_join }}"]
+retry_join = ["{{ leader_priv_ip }}"]
 performance {
     raft_multiplier = {{ raft_mul }}
 }
