@@ -135,3 +135,15 @@ Variables/defaults
 | consul_hcl_mode | 0640 | Permission for consul.hcl file |
 | server_hcl_dest | /etc/consul.d/server.hcl | Location to store consul configuration. Only for server |
 | server_hcl_mode | 0640 | Permission for server.hcl file |
+
+Future changes
+----------------
+* TLS encryption for RPC protocol
+
+References
+-----------
+* https://learn.hashicorp.com/consul/datacenter-deploy/deployment-guide
+
+Contributor
+-----------------------
+Shatrujeet
