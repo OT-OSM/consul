@@ -1,3 +1,38 @@
 ---
-priv_ip: "{{ ansible_default_ipv4.address }}"
-server_name: "{{ inventory_hostname }}"
+    # common
+    consul_owner: consul
+    consul_group: consul
+
+    # consul binary
+    consul_binary_dir: /usr/local/bin
+    consul_binary_perm: 0440
+    consul_binary_owner: root
+    consul_binary_group: root
+
+    # consul user
+    consul_user_home: /etc/consul.d
+    consul_user_shell: /bin/false
+
+    # consul-hcl file
+    consul_hcl_dest: /etc/consul.d/consul.hcl
+    consul_hcl_mode: 0640
+    
+    # server-hcl file
+    server_hcl_dest: /etc/consul.d/server.hcl
+    server_hcl_mode: 0640
+    
+    # consul-service file
+    consul_service_file: /etc/systemd/system/consul.service
+    description: HashiCorp Consul - A service mesh solution
+    documentation: https://www.consul.io/
+    requires: network-online.target
+    after: network-online.target
+    cond_file_not_empty: /etc/consul.d/consul.hcl
+    type: notify
+    exec_start: /usr/local/bin/consul agent -config-dir=/etc/consul.d/
+    exec_reload: /usr/local/bin/consul reload
+    kill_mode: process
+    restart: on-failure
+    limit_file: 65536
+    wanted_by: multi-user.target
+    
