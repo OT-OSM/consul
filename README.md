@@ -1,9 +1,13 @@
 # osm_consul
 
-This repo consists of Ansible role to:\n
-    1. create consul-cluster with any number of nodes\n
-    2. add client to existing consul-cluster\n
-    3. add server to existing consul-cluster\n
+This repo consists of Ansible role to:
+
+    1. create consul-cluster with any number of nodes
+
+    2. add client to existing consul-cluster
+
+    3. add server to existing consul-cluster
+    
     4. add, modify, and delete services under local consul-client
 
 Usage
