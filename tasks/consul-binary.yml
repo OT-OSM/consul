@@ -1,7 +1,0 @@
-- name: Downloading archived consul binary
-  unarchive:
-    src: "{{ consul_binary_url }}"
-    dest: "{{ consul_binary_dir }}"
-    owner: "{{ consul_binary_owner }}"
-    group: "{{ consul_binary_group }}"
-    remote_src: yes

@@ -1,4 +1,5 @@
 ---
+
 -   name: daemon_reload
     systemd:
         daemon_reload: true
@@ -8,4 +9,10 @@
         name: consul
         enabled: true
         state: restarted
+
+-   name: stop_consul
+    service:
+        name: consul
+        state: stopped
+
 ...

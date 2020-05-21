@@ -10,7 +10,7 @@
 
 - name: Register nginx with an http check
   consul:
-    service_name: nginx
-    service_port: 80
-    interval: 60s
-    http: http://localhost:80/
+    service_name: "{{ service_name }}"
+    service_port: "{{ service_port }}"
+    interval: "{{ health_check_interval }}"
+    http: "{{ health_check_url }}"

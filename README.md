@@ -1,111 +1,42 @@
-# osm_consul
+Ansible Role | Consul
+========================
 
+[![CircleCI](https://circleci.com/gh/OT-OSM/openvpn/tree/master.svg?style=svg)](https://app.circleci.com/pipelines/github/OT-OSM/openvpn?branch=master)
+
+
+[![Opstree Solutions][opstree_avatar]][opstree_homepage]<br/>[Opstree Solutions][opstree_homepage] 
+
+  [opstree_homepage]: https://opstree.github.io/
+  [opstree_avatar]: https://img.cloudposse.com/150x150/https://github.com/opstree.png
+
+Automated setup of consul cluster with below added features.
+
+Salient Features
+--------------------
 This repo consists of Ansible role to:
+    * create consul-cluster of any number of nodes
+    * add client to existing consul-cluster
+    * add server to existing consul-cluster
+    * add, modify and delete services under local consul-client
 
-    1. create consul-cluster with any number of nodes
+Version History
+------------------
+|**Date**| **Version**| **Description**| **Changed By** |
+|----------|---------|---------------|-----------------|
+|**22 May 2020** | v.1.0.0 | Initial Draft | Shatrujeet |
 
-    2. add client to existing consul-cluster
+Supported OS
+------------
+  * Ubuntu:bionic
+  * Ubuntu:xenial
+  * Amazon AMI
 
-    3. add server to existing consul-cluster
+Dependencies
+------------
+  * None 
 
-    4. add, modify, and delete services under local consul-client
-
-Usage
---------
-### For n node consul-cluster ###
-
-1. Firstly you will have to create a leader
-```hcl
-ansible-playbook -i inventory leader.yml -t consul-leader-server --ssh-common-args='-o StrictHostKeyChecking=no'
-```
-```hcl
-# leader.yml
----
--   hosts: [consul-leader-server]
-    become: yes
-    become_user: root
-    gather_facts: yes
-    tasks:
-        - import_role:
-            name: ./osm_consul   ## you can give absolute or relative path to osm_consul
-```
-
-2. Then you need to join other server with leader
-```hcl
-ansible-playbook -i inventory servers.yml -t consul-server --ssh-common-args='-o StrictHostKeyChecking=no'
-```
-```hcl
-# servers.yml
----
--   hosts: [consul-servers]
-    become: yes
-    become_user: root
-    gather_facts: yes
-    tasks:
-        - import_role:
-            name: ./osm_consul   ## you can give absolute or relative path to osm_consul
-```
-
-### For adding consul clients to consul-cluster ###
-```hcl
-ansible-playbook -i inventory client.yml -t consul-client --ssh-common-args='-o StrictHostKeyChecking=no'
-```
-```hcl
-# client.yml
----
--   hosts: [consul-clients]
-    become: yes
-    become_user: root
-    gather_facts: yes
-    tasks:
-        - import_role:
-            name: ./osm_consul   ## you can give absolute or relative path to osm_consul
-```
-
-### For Adding Modifying and Deleting services to local consul client ###
-```hcl
-ansible-playbook -i inventory amd.yml -t consul-amd --ssh-common-args='-o StrictHostKeyChecking=no'
-```
-```hcl
-# amd.yml
----
--   hosts: [consul-amd]
-    become: yes
-    become_user: root
-    gather_facts: yes
-    tasks:
-        - import_role:
-            name: ./osm_consul   ## you can give absolute or relative path to osm_consul
-```
-
-### Inventory
-Your inventory should look like below.
-```hcl
-[consul-leader-server]
-server ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
-
-[consul-servers]
-cluster-server1 ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
-cluster-server2 ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
-cluster-server3 ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
-
-[consul-clients]
-client ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
-
-[consul-amd]
-consul-server ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
-```
-
-Tags
-----
-Below tags are assigned to the modules.
-* consul-leader-server :  Modules with this tag required for creating leader of consul-cluster.
-* consul-server        :  Modules with this tag required for creating member(server) of consul-cluster.
-* consul-client        :  Modules with this tag required for adding consul client with the consul cluster.
-* consul-amd           :  Modules with this tag required to register or deregister services with local consul client.
-
-Variables/vars
------------------------
+Variables | vars/main.yml
+----------------------------
 Values required to update and modify by users are kept here.
 
 |**Variables**| **Default Values**| **Description**|
@@ -117,9 +48,13 @@ Values required to update and modify by users are kept here.
 | consul_data_dir | /opt/consul | Data storage directory for consul |
 | datacenter | dc1 | Name of the datacenter |
 | raft_mul | 1 | Value of raft_mul |
+| service_name | nginx | Name of the service you want to register |
+| service_port | 80 | Service port |
+| health_check_interval | 60s | Interval for service status check |
+| health_check_url | http://localhost:80/ | Url of service status check |
 
-Variables/defaults
------------------------
+Variables | defaults/main.yml
+--------------------------------
 
 |**Variables**| **Default Values**| **Description**|
 |----------|---------|---------------|
@@ -136,14 +71,75 @@ Variables/defaults
 | server_hcl_dest | /etc/consul.d/server.hcl | Location to store consul configuration. Only for server |
 | server_hcl_mode | 0640 | Permission for server.hcl file |
 
+Usage
+--------
+### For n node consul-cluster ###
+
+1. At first you will have to create a leader
+```hcl
+ansible-playbook consul.yml --limit consul-leader
+```
+2. Then other server will join the leader. Before that you will have to update private Ip and encryption-key( find at /etc/consul.d/consul.hcl ) of leader server to vars/main.yml.
+   Then run below command.
+```hcl
+ansible-playbook consul.yml --limit consul-server
+```
+### For adding consul clients to consul-cluster ###
+```hcl
+ansible-playbook consul.yml --limit consul-client
+```
+### For Adding Modifying and Deleting services to local consul client ###
+```hcl
+ansible-playbook consul.yml --limit consul-amd
+```
+
+Example Playbook
+-------------------
+
+```hcl
+# consul.yml
+---
+-   hosts: all
+    become: yes
+    become_user: root
+    gather_facts: yes
+    tasks:
+        -   import_role:
+                name: ./osm_consul   ## you can give absolute or relative path to osm_consul
+```
+
+Inventory
+-----------------
+
+Your inventory should look like below.
+```hcl
+[consul-leader]
+server1 ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
+
+[consul-server]
+server2 ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
+server3 ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
+
+[consul-client]
+client1 ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
+
+[consul-amd]
+client-agent ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
+```
+
 Future changes
 ----------------
+* support for CentOS
 * TLS encryption for RPC protocol
 
 References
 -----------
 * https://learn.hashicorp.com/consul/datacenter-deploy/deployment-guide
 
-Contributor
------------------------
+## License
+* MIT / BSD
+
+## Author Information
+
+### Contributors
 Shatrujeet

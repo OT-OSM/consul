@@ -4,7 +4,7 @@
     home: "{{ consul_user_home }}"
     shell: "{{ consul_user_shell }}"
 
-- name: Removing consul storage directory if exists
+- name: Checking and Removing consul storage directory if exists 
   file:
     path: "{{ consul_data_dir }}"
     state: absent

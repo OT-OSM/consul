@@ -1,0 +1,84 @@
+---
+    
+-   name: Checking consul version if exists
+    when: (ansible_limit == "consul-leader") or (ansible_limit == "consul-server") or (ansible_limit == "consul-client")
+    command: consul --version
+    run_once: true
+    register: con_ver
+
+-   name: consul --version
+    when: ((ansible_limit == "consul-leader") or (ansible_limit == "consul-server") or (ansible_limit == "consul-client")) and (con_ver.stdout_lines[0] == consul_version)
+    debug:
+        msg: "{{ con_ver.stdout_lines[0] }} already exists."
+
+-   name: Downloading archived consul binary
+    when: ((ansible_limit == "consul-leader") or (ansible_limit == "consul-server") or (ansible_limit == "consul-client")) and (con_ver.stdout_lines[0] != consul_version)
+    unarchive:
+        src: "{{ consul_binary_url }}"
+        dest: "{{ consul_binary_dir }}"
+        owner: "{{ consul_binary_owner }}"
+        group: "{{ consul_binary_group }}"
+        remote_src: yes
+
+-   name: Executing command to generate encrypt key
+    when: ansible_limit == "consul-leader"
+    command: consul keygen
+    run_once: true
+    register: key_encrypt
+
+-   name: Stopping consul service if running
+    when: (ansible_limit == "consul-leader") or (ansible_limit == "consul-server") or (ansible_limit == "consul-client")
+    service:
+        name: consul
+        state: stopped
+
+-   name: Including file for consul user
+    when: (ansible_limit == "consul-leader") or (ansible_limit == "consul-server") or (ansible_limit == "consul-client")
+    include: consul-user.yml
+
+-   name: Creating a Consul service file
+    when: (ansible_limit == "consul-leader") or (ansible_limit == "consul-server") or (ansible_limit == "consul-client")
+    template:
+        src: consul-service.j2
+        dest: "{{ consul_service_file }}"
+
+-   name: Creating consul.hcl file for leader
+    when: ansible_limit == "consul-leader"
+    template:
+        src: consul-hcl-leader.j2
+        dest: "{{ consul_hcl_dest }}"
+
+-   name: Creating consul.hcl file for server/client
+    when: (ansible_limit == "consul-server") or (ansible_limit == "consul-client")
+    template:
+        src: consul-hcl.j2
+        dest: "{{ consul_hcl_dest }}"
+
+-   name: Creating server.hcl file for leader
+    when: ansible_limit == "consul-leader"
+    template:
+        src: server-hcl-leader.j2
+        dest: "{{ server_hcl_dest }}"
+        owner: "{{ consul_owner }}"
+        group: "{{ consul_group }}"
+        mode: "{{ server_hcl_mode }}"
+           
+-   name: Creating server.hcl file for server
+    when: ansible_limit == "consul-server"
+    template:
+        src: server-hcl.j2
+        dest: "{{ server_hcl_dest }}"
+        owner: "{{ consul_owner }}"
+        group: "{{ consul_group }}"
+        mode: "{{ server_hcl_mode }}"
+
+-   name: Including file for registering and modifying services in consul-agent
+    when: ansible_limit == "consul-amd"
+    include: consul-amd.yml
+
+-   name: Reloading systemd and restarting consul
+    when: (ansible_limit == "consul-leader") or (ansible_limit == "consul-server") or (ansible_limit == "consul-client") or (ansible_limit == "consul-amd")
+    command: /bin/true
+    notify: 
+        - daemon_reload
+        - restart_consul

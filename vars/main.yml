@@ -1,7 +1,7 @@
 ---
     # enter details of the leader server
-    leader_priv_ip: " "
-    encrypt_key: gUX7DRRApx9PokdtZfLiuQPKGb1vRWBEqGORCjPzv/U=
+    leader_priv_ip: "172.31.81.239"
+    encrypt_key: NdOYgTQXpGejrmvL0FKE6F5Y+FJZCmslI3OIDDixzzY=
     
     # consul binary
     consul_binary_url: https://releases.hashicorp.com/consul/1.7.3/consul_1.7.3_linux_amd64.zip
@@ -13,4 +13,10 @@
     # consul-hcl
     datacenter: dc1
     raft_mul: 1
+    
+    # add, modify and delete services
+    service_name: nginx
+    service_port: 80
+    health_check_interval: 60s
+    health_check_url: http://localhost:80/
     
