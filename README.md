@@ -1,9 +1,6 @@
 Ansible Role | Consul
 ========================
 
-[![CircleCI](https://circleci.com/gh/OT-OSM/openvpn/tree/master.svg?style=svg)](https://app.circleci.com/pipelines/github/OT-OSM/openvpn?branch=master)
-
-
 [![Opstree Solutions][opstree_avatar]][opstree_homepage]<br/>[Opstree Solutions][opstree_homepage] 
 
   [opstree_homepage]: https://opstree.github.io/
