@@ -1,11 +1,11 @@
 ---
     # enter details of the leader server
-    leader_priv_ip: "172.31.81.239"
-    encrypt_key: NdOYgTQXpGejrmvL0FKE6F5Y+FJZCmslI3OIDDixzzY=
+    leader_priv_ip: "private Ip of leader required"
+    encrypt_key: encrypt_key of leader required
     
     # consul binary
-    consul_binary_url: https://releases.hashicorp.com/consul/1.7.3/consul_1.7.3_linux_amd64.zip
-    consul_version: Consul v1.7.3
+    consul_binary_url: https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
+    consul_version: Consul v1.7.2
     
     # consul persistent storage
     consul_data_dir: /opt/consul
