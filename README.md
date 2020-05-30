@@ -18,7 +18,7 @@ Version History
 ------------------
 |**Date**| **Version**| **Description**| **Changed By** |
 |----------|---------|---------------|-----------------|
-|**31 May 2020** | v1.0.0 | Initial Draft | Shatrujeet |
+|**1 June 2020** | v1.0.0 | Initial Draft | Shatrujeet |
 
 Supported OS
 ------------
