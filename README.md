@@ -6,21 +6,19 @@ Ansible Role | Consul
   [opstree_homepage]: https://opstree.github.io/
   [opstree_avatar]: https://img.cloudposse.com/150x150/https://github.com/opstree.png
 
-Automated setup of consul cluster with below added features.
+Automated setup of consul cluster with below features.
 
 Salient Features
 --------------------
-This repo consists of Ansible role to:
-  - create consul-cluster of any number of nodes
-  - add client to existing consul-cluster
-  - add server to existing consul-cluster
-  - add, modify and delete services under local consul-client
+This repo consists of Ansible role to setup consul cluster of:
+  - any number of agent server nodes
+  - any number of agent client nodes
 
 Version History
 ------------------
 |**Date**| **Version**| **Description**| **Changed By** |
 |----------|---------|---------------|-----------------|
-|**22 May 2020** | v1.0.0 | Initial Draft | Shatrujeet |
+|**31 May 2020** | v1.0.0 | Initial Draft | Shatrujeet |
 
 Supported OS
 ------------
@@ -38,17 +36,11 @@ Values required to update and modify by users are kept here.
 
 |**Variables**| **Default Values**| **Description**|
 |----------|---------|---------------|
-| leader_priv_ip | private Ip of leader required | Private Ip of consul-cluster leader. Must to fill. |
-| encrypt_key | encrypt_key of leader required | Encryption key for gossip protocol. Must be same for all member of cluster. Leader once created find this in file /etc/consul.d/consul.hcl | 
 | consul_binary_url | https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip | Location to download consul binary |
 | consul_version | Consul v1.7.2 | Version of consul |
 | consul_data_dir | /opt/consul | Data storage directory for consul |
 | datacenter | dc1 | Name of the datacenter |
 | raft_mul | 1 | Value of raft_mul |
-| service_name | nginx | Name of the service you want to register |
-| service_port | 80 | Service port |
-| health_check_interval | 60s | Interval for service status check |
-| health_check_url | http://localhost:80/ | Url of service status check |
 
 Variables | defaults/main.yml
 --------------------------------
@@ -68,27 +60,6 @@ Variables | defaults/main.yml
 | server_hcl_dest | /etc/consul.d/server.hcl | Location to store consul configuration. Only for server |
 | server_hcl_mode | 0640 | Permission for server.hcl file |
 
-Usage
---------
-### For n node consul-cluster ###
-
-1. At first you will have to create a leader
-```sh
-ansible-playbook consul.yml --limit consul-leader
-```
-2. Then other server will join the leader. Before that you will have to update private Ip and encryption-key( find at /etc/consul.d/consul.hcl ) of leader server to vars/main.yml.
-   After updating run:
-```sh
-ansible-playbook consul.yml --limit consul-server
-```
-### For adding consul clients to consul-cluster ###
-```sh
-ansible-playbook consul.yml --limit consul-client
-```
-### For Adding Modifying and Deleting services to local consul client ###
-```sh
-ansible-playbook consul.yml --limit consul-amd
-```
 
 Example Playbook
 -------------------
@@ -96,13 +67,13 @@ Example Playbook
 ```
 # consul.yml
 ---
--   hosts: all
-    become: yes
-    become_user: root
-    gather_facts: yes
-    tasks:
-        -   import_role:
-                name: ./osm_consul   ## you can give absolute or relative path to osm_consul
+- hosts: all
+  become: yes
+  become_user: root
+  gather_facts: yes
+  tasks:
+    - import_role:
+        name: ./osm_consul     ## you can give absolute or relative path to osm_consul
 ```
 
 Inventory
@@ -119,9 +90,12 @@ server3 ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
 
 [consul-client]
 client1 ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
+```
 
-[consul-amd]
-client-agent ansible_host=ip/dns ansible_connection=ssh ansible_user=ubuntu
+Ansible command
+-------------------
+```
+ansible-playbook consul.yml
 ```
 
 Future changes

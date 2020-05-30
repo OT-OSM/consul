@@ -1,24 +1,23 @@
 ---
-    # -*- coding: utf-8 -*-
-    
-    stages:
-      - yaml-lint
-      - ansible-lint
-    
-    variables:
-      image_name: opstree/docker:ansible-lint
-    
-    yaml_lint:
-      stage: yaml-lint
-      image: $image_name
-      script:
-       - yamllint ./*/*.yml
-      allow_failure: true
-    
-    ansible_lint:
-      stage: ansible-lint
-      image: $image_name
-      script:
-        - ansible-lint .
+  # -*- coding: utf-8 -*-
+  stages:
+    - yaml-lint
+    - ansible-lint
+  
+  variables:
+    image_name: opstree/docker:ansible-lint
+  
+  yaml_lint:
+    stage: yaml-lint
+    image: $image_name
+    script:
+      - yamllint ./*/*.yml
+    allow_failure: true
+  
+  ansible_lint:
+    stage: ansible-lint
+    image: $image_name
+    script:
+      - ansible-lint .
 ...
     

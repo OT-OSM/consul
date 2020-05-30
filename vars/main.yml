@@ -1,22 +1,11 @@
----
-    # enter details of the leader server
-    leader_priv_ip: "private Ip of leader required"
-    encrypt_key: encrypt_key of leader required
-    
-    # consul binary
-    consul_binary_url: https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
-    consul_version: Consul v1.7.2
-    
-    # consul persistent storage
-    consul_data_dir: /opt/consul
-    
-    # consul-hcl
-    datacenter: dc1
-    raft_mul: 1
-    
-    # add, modify and delete services
-    service_name: nginx
-    service_port: 80
-    health_check_interval: 60s
-    health_check_url: http://localhost:80/
+---    
+  # consul binary
+  consul_binary_url: https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
+
+  # consul persistent storage
+  consul_data_dir: /opt/consul
+
+  # consul-hcl
+  datacenter: dc1
+  raft_mul: 1
     

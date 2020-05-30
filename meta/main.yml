@@ -13,9 +13,5 @@ galaxy_info:
       - name: consul
         versions:
             - 1.7.2
-  galaxy_tags:
-      - consul-cluster
-      - consul-server
-      - consul-client
-
+            
 dependencies: []

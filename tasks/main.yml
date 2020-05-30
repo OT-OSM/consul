@@ -3,8 +3,3 @@
 - name: Include OS Specific setup file
   when: ansible_os_family == "Debian"
   include: consul-Debian.yml
-
-- name: Checking for OS
-  when: ansible_os_family != "Debian"
-  debug:
-    msg: OS Not Supported!
