@@ -37,7 +37,6 @@ Values required to update and modify by users are kept here.
 |**Variables**| **Default Values**| **Description**|
 |----------|---------|---------------|
 | consul_binary_url | https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip | Location to download consul binary |
-| consul_version | Consul v1.7.2 | Version of consul |
 | consul_data_dir | /opt/consul | Data storage directory for consul |
 | datacenter | dc1 | Name of the datacenter |
 | raft_mul | 1 | Value of raft_mul |
