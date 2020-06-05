@@ -17,7 +17,7 @@
     dest: "{{ consul_binary_dir }}"
     owner: "{{ consul_binary_owner }}"
     group: "{{ consul_binary_group }}"
-    remote_src: yes
+    remote_src: true
 
 - name: Executing command to generate encrypt key
   when: group_names[0] == "consul-leader"
@@ -29,7 +29,7 @@
   service:
     name: consul
     state: stopped
-  ignore_errors: True
+  ignore_errors: true
 
 - name: Including file for consul user
   when: (group_names[0] == "consul-leader") or (group_names[0] == "consul-server") or (group_names[0] == "consul-client")
@@ -55,7 +55,7 @@
     owner: "{{ consul_owner }}"
     group: "{{ consul_group }}"
     mode: "{{ server_hcl_mode }}"
-           
+
 - name: Creating server.hcl file for server
   when: group_names[0] == "consul-server"
   template:
@@ -68,6 +68,6 @@
 - name: Reloading systemd and restarting consul
   when: (group_names[0] == "consul-leader") or (group_names[0] == "consul-server") or (group_names[0] == "consul-client")
   command: /bin/true
-  notify: 
+  notify:
     - daemon_reload
     - restart_consul

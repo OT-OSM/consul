@@ -1,11 +1,10 @@
----    
-  # consul binary
-  consul_binary_url: https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
+---
+# consul binary
+consul_binary_url: https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
 
-  # consul persistent storage
-  consul_data_dir: /opt/consul
+# consul persistent storage
+consul_data_dir: /opt/consul
 
-  # consul-hcl
-  datacenter: dc1
-  raft_mul: 1
-    
+# consul-hcl
+datacenter: dc1
+raft_mul: 1
