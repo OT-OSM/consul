@@ -1,0 +1,7 @@
+datacenter = "{{ datacenter }}"
+data_dir = "{{ consul_data_dir }}"
+encrypt = "{{ hostvars[groups['consul-leader'][0]].encr_key.stdout }}"
+retry_join = ["{{ hostvars[groups['consul-leader'][0]].ip_leader }}"]
+performance {
+    raft_multiplier = {{ raft_mul }}
+}

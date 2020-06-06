@@ -1,0 +1,16 @@
+---
+
+- name: daemon_reload
+  systemd:
+    daemon_reload: true
+
+- name: restart_consul
+  service:
+    name: consul
+    enabled: true
+    state: restarted
+
+- name: stop_consul
+  service:
+    name: consul
+    state: stopped

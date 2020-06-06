@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  author: Shatrujeet
+  description: Create consul cluster with any number of nodes
+
+  min_ansible_version: 2.0
+
+  platforms:
+    - name: Ubuntu
+      versions:
+        - xenial
+        - precise
+        - trusty
+    - name: consul
+      versions:
+        - 1.7.2
+dependencies: []
