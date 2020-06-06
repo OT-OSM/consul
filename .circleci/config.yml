@@ -1,0 +1,22 @@
+---
+version: 2.1
+jobs:
+  yaml_lint:
+    docker:
+      - image: opstree/docker:ansible-lint
+    steps:
+      - checkout
+      - run: yamllint ./*/*.yml
+  ansible_lint:
+    docker:
+      - image: opstree/docker:ansible-lint
+    steps:
+      - checkout
+      - run: ansible-lint .
+workflows:
+  version: 2.1
+  lint_tests:
+    jobs:
+      - yaml_lint
+      - ansible_lint
+...
