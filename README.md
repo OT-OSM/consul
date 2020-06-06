@@ -67,12 +67,9 @@ Example Playbook
 # consul.yml
 ---
 - hosts: all
-  become: yes
-  become_user: root
-  gather_facts: yes
-  tasks:
-    - import_role:
-        name: ./osm_consul     ## you can give absolute or relative path to osm_consul
+  become: true
+  roles:
+    - role: osm_java
 ```
 
 Inventory
