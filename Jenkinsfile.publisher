@@ -1,4 +1,4 @@
-@Library('opstree-library@github-promoter-v1.0') _ 
+@Library('opstree-library') _ 
  
 node {
     githubpromoterworkflow.call(
