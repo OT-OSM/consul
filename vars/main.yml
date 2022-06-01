@@ -1,10 +1,11 @@
 ---
-# consul binary
-consul_binary_url: https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
-
-# consul persistent storage
-consul_data_dir: /opt/consul
+# vars file for consul-standalone
+consul_version: 1.9.5
+# consul storage
+consul_data_path: /var/lib/consul
 
 # consul-hcl
-datacenter: dc1
-raft_mul: 1
+consul_datacenter: dc1
+
+#consul-node
+consul_nodename: node-1
