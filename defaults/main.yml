@@ -45,4 +45,3 @@ package_name: "consul"
 description: HashiCorp Consul - A service mesh solution
 documentation: https://www.consul.io/
 wanted_by: multi-user.target
-# keygenerate_var: encrypt_key
