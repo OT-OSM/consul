@@ -1,0 +1,4 @@
+---
+- name: Include OS Specific setup file
+  when: ansible_os_family == "Debian"
+  include: consul-debian.yml

@@ -1,0 +1,10 @@
+---
+# handlers file for consul-standalone
+- name: daemon_reload
+  systemd:
+    daemon_reload: true
+
+- name: restart_consul
+  service:
+    name: "{{ package_name}}"
+    state: restarted

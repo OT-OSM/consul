@@ -1,0 +1,11 @@
+---
+# vars file for consul-standalone
+consul_version: 1.8.4
+# consul storage
+consul_data_path: /var/lib/consul
+
+# consul-hcl
+consul_datacenter: dc1
+
+#consul-node
+consul_nodename: node-1

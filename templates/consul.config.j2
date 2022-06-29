@@ -1,0 +1,14 @@
+{
+"bootstrap": {{ consul_bootstrap }},
+"server": {{ consul_server }},
+"log_level": "{{ consul_loglevel }}",
+"enable_syslog": {{ consul_enable_syslog }},
+"datacenter": "{{ consul_datacenter }}",
+"addresses" : {
+"http": "{{ consul_http_address }}"
+},
+"bind_addr": "{{ consul_ip }}",
+"node_name": "{{ consul_nodename }}",
+"data_dir": "{{ consul_data_path }}",
+"encrypt": "{{ encryption_key }}"
+}

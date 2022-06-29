@@ -1,0 +1,47 @@
+---
+# defaults file for consul-standalone
+consul_url: "https://releases.hashicorp.com/consul/{{ consul_version }}/{{ consul_package }}"
+consul_package: "consul_{{ consul_version }}_linux_amd64.zip"
+
+#consul user
+consul_user: consul
+consul_group: consul
+consul_user_shell: /bin/false
+
+consul_bin_path: "/usr/local/bin"
+consul_binary: "{{ consul_bin_path }}/consul"
+consul_binary_owner: root
+consul_binary_group: root
+consul_configd_path: "/etc/consul.d"
+
+# consul configuration file
+consul_config_src: consul.config.j2
+consul_config_dest: "/etc/consul.d/config.json"
+consul_dir_mode: 0755
+
+#consul service file
+consul_service_src: consul.service.j2
+consul_service_dest: "/etc/systemd/system/consul.service"
+consul_service_mode: 0644
+
+# consul_datacenter: dc1
+consul_loglevel: DEBUG
+consul_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+consul_http_address: "0.0.0.0"
+consul_enable_syslog: "true"
+
+# Consul nodes behaviour #
+consul_server: "true"
+consul_bootstrap: "true"
+
+#key 
+consul_keygenerate_file: "/opt/consul_keygenerate"
+encryption_key: "{{ encrypt_key['content'] | b64decode | replace('\n', '')}}"
+
+#addon package
+addon_package: "unzip"
+
+package_name: "consul"
+description: HashiCorp Consul - A service mesh solution
+documentation: https://www.consul.io/
+wanted_by: multi-user.target
