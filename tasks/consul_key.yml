@@ -1,0 +1,22 @@
+- name: check consul_keygenerate file
+  stat:
+    path: "{{ consul_keygenerate_file }}"
+  register: info
+  run_once: true
+  
+- name: check if key is already generated on server
+  debug:
+    msg: Key already generated
+  when: info.stat.exists
+  run_once: true
+        
+- name: "If key is not generated then generate it on server"
+  shell: "consul keygen > {{ consul_keygenerate_file }}"
+  when: not info.stat.exists
+  run_once: true
+
+- name: saving remote file content into variable
+  slurp:
+    src: "{{ consul_keygenerate_file }}"
+  register: encrypt_key
+  run_once: true

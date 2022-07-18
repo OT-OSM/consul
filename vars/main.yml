@@ -1,11 +1,12 @@
 ---
-# vars file for consul-standalone
+# vars file for consul-server-cluster
 consul_version: 1.8.4
 # consul storage
 consul_data_path: /var/lib/consul
-
-# consul-hcl
 consul_datacenter: dc1
-
-#consul-node
-consul_nodename: node-1
+acl_enable: false
+consul_acl_default_policy: deny
+consul_keygenerate_file: /opt/consul_keygenerate
+consul_acl_file: /opt/acl_token
+local_acl_dest: /tmp/consul_acl
+local_key_dest: /tmp/consul_key

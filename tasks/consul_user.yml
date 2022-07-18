@@ -4,8 +4,9 @@
     state: present
     shell: "{{ consul_user_shell }}"
     createhome: no
-  
-- name: Create a consul and consul.d directory if it does not exist
+
+# Creating configuration , data and log directory and assigning consul owner & group on it 
+- name: Creating configuration, data and log directory if it does not exist
   file:
     path: "{{ item }}"
     state: directory
@@ -15,3 +16,4 @@
   with_items:
   - "{{ consul_configd_path }}"
   - "{{ consul_data_path }}"
+  - "{{ consul_logdir }}"

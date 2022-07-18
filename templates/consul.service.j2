@@ -6,7 +6,7 @@ Documentation={{ documentation }}
 WorkingDirectory={{ consul_configd_path }}
 User={{ consul_user }}
 Group={{ consul_group }}
-ExecStart={{ consul_binary }} agent -ui -data-dir {{ consul_data_path }} -config-dir={{ consul_configd_path }}
+ExecStart={{ consul_binary }} agent -data-dir {{ consul_data_path }} -config-dir={{ consul_configd_path }}
 
 [Install]
-WantedBy={{ wanted_by }}
+WantedBy={{ wanted_by }}  

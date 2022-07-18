@@ -1,47 +1,75 @@
 ---
-# defaults file for consul-standalone
-consul_url: "https://releases.hashicorp.com/consul/{{ consul_version }}/{{ consul_package }}"
-consul_package: "consul_{{ consul_version }}_linux_amd64.zip"
+#addon package
+addon_package: 
+  - unzip
 
-#consul user
+# consul url for downloading 
+consul_url: https://releases.hashicorp.com/consul/{{ consul_version }}/{{ consul_package }}
+consul_package: consul_{{ consul_version }}_linux_amd64.zip
+
+
+consul_bin_path: /usr/local/bin
+consul_binary: "{{ consul_bin_path }}/consul"
+consul_binary_owner: root
+consul_binary_group: root
+consul_configd_path: /etc/consul.d
+
+# consul user 
 consul_user: consul
 consul_group: consul
 consul_user_shell: /bin/false
 
-consul_bin_path: "/usr/local/bin"
-consul_binary: "{{ consul_bin_path }}/consul"
-consul_binary_owner: root
-consul_binary_group: root
-consul_configd_path: "/etc/consul.d"
+# consul server configuration file
+consul_dir_mode: u=rwx,g=rx,o=rx
 
-# consul configuration file
+# consul log directory and file  
+consul_logdir: /var/log/consul
+consul_logfile: "{{ consul_logdir }}/consul.log"
+
+#key 
+encryption_key: "{{ encrypt_key['content'] | b64decode | replace('\n', '')}}"
+
+# consul server configuration file
 consul_config_src: consul.config.j2
 consul_config_dest: "/etc/consul.d/config.json"
-consul_dir_mode: 0755
+consul_service_mode: u=rwx,g=rx,o=rx
 
+# consul server configuration file
+consul_acl_src: server_acl.j2
+consul_acl_dest: /etc/consul.d/acl.json
+acl_token: "{{ acl_bootstrap_token['content'] | b64decode }}"
 #consul service file
 consul_service_src: consul.service.j2
 consul_service_dest: "/etc/systemd/system/consul.service"
-consul_service_mode: 0644
 
-# consul_datacenter: dc1
-consul_loglevel: DEBUG
+consul_loglevel: INFO
+
+# consul_ip: "{{ hostvars[ansible_nodename]['ansible_' + consul_interface]['ipv4']['address'] }}"
 consul_ip: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
-consul_http_address: "0.0.0.0"
+consul_http_address: 0.0.0.0
+consul_client_address: 0.0.0.0
 consul_enable_syslog: "true"
 
-# Consul nodes behaviour #
+# Consul server behaviour #
 consul_server: "true"
+consul_server_ui: "true"
 consul_bootstrap: "true"
 
-#key 
-consul_keygenerate_file: "/opt/consul_keygenerate"
-encryption_key: "{{ encrypt_key['content'] | b64decode | replace('\n', '')}}"
+# Consul nodes behaviour #
+consul_leave: "true"
+consul_rejoin: "true"
+consul_client_ui: "true"
 
-#addon package
-addon_package: "unzip"
+consul_nodename: "{{ ansible_nodename }}"
 
+# service file 
 package_name: "consul"
 description: HashiCorp Consul - A service mesh solution
 documentation: https://www.consul.io/
 wanted_by: multi-user.target
+
+# consul server acl 
+consul_acl_down_policy: extend-cache
+
+consul_service_name: consul
+consul_symlink_dest: /etc/systemd/system/multi-user.target.wants/{{ consul_service_name }}.service

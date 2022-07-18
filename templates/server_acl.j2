@@ -1,0 +1,7 @@
+{
+  "acl" : {
+    "enabled" : {{ acl_enable|lower}},
+    "default_policy" : "{{ consul_acl_default_policy }}",
+    "down_policy" : "{{ consul_acl_down_policy }}"
+  }
+}
