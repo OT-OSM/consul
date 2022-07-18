@@ -58,7 +58,7 @@
   local_action:
     module: copy
     content: "{{ encryption_key }}"
-    dest: "{{ local_key_dest }]"
+    dest: "{{ local_key_dest }}"
   run_once: true
   become: false
   no_log: true
