@@ -54,18 +54,6 @@
   include: consul_acl.yml
   when: acl_enable|bool == true
 
-# - name: Create local temporary files for storing encrpyt key and boostrap acl token
-#   local_action:
-#     module: copy
-#     content: "{{ item.content }}"
-#     dest: "{{ item.dest_file }}"
-#   run_once: true
-#   become: false
-#   loop:
-#     - { content: "{{ encryption_key }}", dest_file: "/tmp/consul" }
-#     - { content: "{{ acl_token }}", dest_file: "/tmp/consul_acl" }
-#   # no_log: True
-
 - name: Create local temporary files for storing encrpyt key
   local_action:
     module: copy
