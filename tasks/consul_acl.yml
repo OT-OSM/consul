@@ -1,0 +1,28 @@
+- name: Send acl configuration
+  template:
+    src: "{{ consul_acl_src }}"
+    dest: "{{ consul_acl_dest }}"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "{{ consul_service_mode }}"
+  notify: reload_systemd
+
+- name: Running handlers for cluster nodes
+  meta: flush_handlers
+
+- name: check ACL master bootstrap token file exists or not
+  stat:
+    path: "{{ consul_acl_file }}"
+  register: info_acl
+  run_once: true
+
+- name: "If ACL master bootstrap token is not generated then generate it on server"
+  shell: "consul acl bootstrap > {{ consul_acl_file }}"
+  when: not info_acl.stat.exists
+  run_once: true
+
+- name: save remote file content
+  slurp:
+    src: "{{ consul_acl_file }}"
+  register: acl_bootstrap_token
+  run_once: true

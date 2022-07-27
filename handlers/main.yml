@@ -1,10 +1,7 @@
 ---
-# handlers file for consul-standalone
-- name: daemon_reload
+# handlers file for consul-server-cluster
+- name: reload_systemd
   systemd:
-    daemon_reload: true
-
-- name: restart_consul
-  service:
-    name: "{{ package_name}}"
+    daemon_reload: "yes"
+    name: "{{ consul_service_name }}"
     state: restarted
