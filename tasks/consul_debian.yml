@@ -63,7 +63,7 @@
   become: false
   no_log: true
 
-- name: Create local temporary files for storing encrpyt key and boostrap acl token
+- name: Create local temporary files for storing bootstrap acl token
   local_action:
     module: copy
     content: "{{ acl_token }}"
