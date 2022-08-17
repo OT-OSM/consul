@@ -10,6 +10,10 @@
 - name: Running handlers for cluster nodes
   meta: flush_handlers
 
+- name: Sleep for 60 seconds for the service to restart
+  wait_for:
+    timeout: 60
+
 - name: check ACL master bootstrap token file exists or not
   stat:
     path: "{{ consul_acl_file }}"
