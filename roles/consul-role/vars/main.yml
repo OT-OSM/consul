@@ -1,0 +1,4 @@
+---
+# vars file for consul
+consul_binary_url: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip"
+consul_zip_path: "/tmp/consul_{{ consul_version }}.zip"

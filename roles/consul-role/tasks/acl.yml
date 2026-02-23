@@ -1,0 +1,16 @@
+- name: Wait for Consul API
+  ansible.builtin.wait_for:
+    port: 8500
+    delay: 5
+    timeout: 60
+
+- name: Bootstrap ACL (run once)
+  ansible.builtin.command: consul acl bootstrap
+  register: consul_bootstrap
+  run_once: true
+  when: consul_agent_token == ""
+
+- name: Show bootstrap token
+  ansible.builtin.debug:
+    var: consul_bootstrap.stdout
+  when: consul_bootstrap is defined
