@@ -1,0 +1,10 @@
+- name: Create Consul directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0750"
+  loop:
+    - "{{ consul_data_dir }}"
+    - "{{ consul_config_dir }}"

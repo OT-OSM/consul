@@ -1,0 +1,28 @@
+node_name = "{{ consul_node_name }}"
+bind_addr = "{{ consul_bind_addr }}"
+data_dir = "{{ consul_data_dir }}"
+
+server = {{ consul_is_server | lower }}
+bootstrap_expect = {{ consul_bootstrap_expect }}
+
+ui_config {
+  enabled = {{ consul_enable_ui | lower }}
+}
+
+retry_join = [
+{% for host in groups['consul_servers'] %}
+  "{{ hostvars[host]['ansible_default_ipv4']['address'] }}"{% if not loop.last %},{% endif %}
+{% endfor %}
+]
+
+acl {
+  enabled = {{ consul_acl_enabled | lower }}
+  default_policy = "{{ consul_acl_default_policy }}"
+  enable_token_persistence = {{ consul_acl_token_persistence | lower }}
+
+{% if consul_agent_token != "" %}
+  tokens {
+    agent = "{{ consul_agent_token }}"
+  }
+{% endif %}
+}

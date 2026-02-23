@@ -1,0 +1,8 @@
+- name: Deploy Consul server configuration
+  ansible.builtin.template:
+    src: server.hcl.j2
+    dest: "{{ consul_config_dir }}/server.hcl"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0640"
+  notify: Restart Consul

@@ -1,0 +1,10 @@
+---
+# handlers file for consul
+- name: Restart Consul
+  ansible.builtin.systemd:
+    name: consul
+    state: restarted
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true

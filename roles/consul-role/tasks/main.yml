@@ -1,0 +1,17 @@
+---
+# tasks file for consul
+- name: Include installation tasks
+  ansible.builtin.import_tasks: install.yml
+
+- name: Include directory tasks
+  ansible.builtin.import_tasks: directories.yml
+
+- name: Include configuration tasks
+  ansible.builtin.import_tasks: config.yml
+
+- name: Include service tasks
+  ansible.builtin.import_tasks: service.yml
+
+- name: Include ACL tasks
+  ansible.builtin.import_tasks: acl.yml
+  when: consul_acl_enabled

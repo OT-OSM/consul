@@ -1,0 +1,28 @@
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - unzip
+      - wget
+      - curl
+    state: present
+    update_cache: true
+
+- name: Create consul user
+  ansible.builtin.user:
+    name: "{{ consul_user }}"
+    system: true
+    shell: /sbin/nologin
+    create_home: false
+
+- name: Download Consul binary
+  ansible.builtin.get_url:
+    url: "{{ consul_binary_url }}"
+    dest: "{{ consul_zip_path }}"
+    mode: "0644"
+
+- name: Unarchive Consul
+  ansible.builtin.unarchive:
+    src: "{{ consul_zip_path }}"
+    dest: "{{ consul_install_dir }}"
+    remote_src: true
+    mode: "0755"
