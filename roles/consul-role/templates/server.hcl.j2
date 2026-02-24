@@ -1,5 +1,6 @@
 node_name = "{{ consul_node_name }}"
 bind_addr = "{{ consul_bind_addr }}"
+client_addr = "0.0.0.0"
 data_dir = "{{ consul_data_dir }}"
 
 server = {{ consul_is_server | lower }}
