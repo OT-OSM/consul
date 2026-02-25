@@ -7,9 +7,17 @@
     state: present
     update_cache: true
 
+
+- name: Create consul group
+  ansible.builtin.group:
+    name: "{{ consul_group }}"
+    system: true
+
+
 - name: Create consul user
   ansible.builtin.user:
     name: "{{ consul_user }}"
+    group: "{{ consul_group }}"
     system: true
     shell: /sbin/nologin
     create_home: false

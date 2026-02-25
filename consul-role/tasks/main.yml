@@ -15,3 +15,4 @@
 - name: Include ACL tasks
   ansible.builtin.import_tasks: acl.yml
   when: consul_acl_enabled
+

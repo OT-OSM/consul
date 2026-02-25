@@ -9,8 +9,5 @@
   register: consul_bootstrap
   run_once: true
   when: consul_agent_token == ""
+  failed_when: false
 
-- name: Show bootstrap token
-  ansible.builtin.debug:
-    var: consul_bootstrap.stdout
-  when: consul_bootstrap is defined

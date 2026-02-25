@@ -1,6 +1,6 @@
 node_name = "{{ consul_node_name }}"
 bind_addr = "{{ consul_bind_addr }}"
-client_addr = "0.0.0.0"
+client_addr = "{{ consul_client_addr }}"
 data_dir = "{{ consul_data_dir }}"
 
 server = {{ consul_is_server | lower }}
@@ -12,7 +12,7 @@ ui_config {
 
 retry_join = [
 {% for host in groups['consul_servers'] %}
-  "{{ hostvars[host]['ansible_default_ipv4']['address'] }}"{% if not loop.last %},{% endif %}
+  "{{ hostvars[host]['ansible_host'] }}"{% if not loop.last %},{% endif %}
 {% endfor %}
 ]
 
@@ -27,3 +27,4 @@ acl {
   }
 {% endif %}
 }
+
