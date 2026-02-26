@@ -1,5 +1,6 @@
 - name: Deploy Consul Cluster
-  hosts: consul_servers
+  hosts: all
   become: true
   roles:
     - consul-role
+
