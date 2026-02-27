@@ -1,5 +1,0 @@
-
-[consul_servers]
-d-he-mw-coe-cnsl-8-138 ansible_host=192.168.8.138
-d-he-mw-coe-cnsl-8-35 ansible_host=192.168.8.35
-d-he-mw-coe-cnsl-8-220 ansible_host=192.168.8.220
