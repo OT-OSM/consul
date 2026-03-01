@@ -4,10 +4,31 @@
     delay: 5
     timeout: 60
 
-- name: Bootstrap ACL (run once)
+- name: Check if ACL bootstrap file exists
+  ansible.builtin.stat:
+    path: /etc/consul.d/bootstrap.token
+  register: consul_acl_file
+  run_once: true
+
+- name: Bootstrap ACL (run once if not already bootstrapped)
   ansible.builtin.command: consul acl bootstrap
   register: consul_bootstrap
   run_once: true
-  when: consul_agent_token == ""
+  when: not consul_acl_file.stat.exists
   failed_when: false
 
+- name: Extract SecretID from bootstrap output
+  ansible.builtin.set_fact:
+    consul_master_token: "{{ consul_bootstrap.stdout | regex_search('SecretID:\\s+(\\S+)', '\\1') }}"
+  when: consul_bootstrap.stdout is defined
+  run_once: true
+
+- name: Save bootstrap token to file
+  ansible.builtin.copy:
+    content: "{{ consul_master_token }}"
+    dest: /etc/consul.d/bootstrap.token
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  when: consul_master_token is defined
+  run_once: true
