@@ -4,26 +4,34 @@
     delay: 5
     timeout: 60
 
-- name: Check if ACL bootstrap file exists
-  ansible.builtin.stat:
-    path: /etc/consul.d/bootstrap.token
-  register: consul_acl_file
+# Check if ACL already bootstrapped by querying leader
+- name: Check if ACL bootstrap already done
+  ansible.builtin.command: consul acl policy list
+  register: acl_check
+  failed_when: false
+  changed_when: false
   run_once: true
+  no_log: true
 
-- name: Bootstrap ACL (run once if not already bootstrapped)
+# Bootstrap only if ACL not initialized
+- name: Bootstrap ACL (only if not already bootstrapped)
   ansible.builtin.command: consul acl bootstrap
   register: consul_bootstrap
   run_once: true
-  when: not consul_acl_file.stat.exists
+  when: "'Permission denied' in acl_check.stderr or acl_check.rc != 0"
+  no_log: true
   failed_when: false
 
-- name: Extract SecretID from bootstrap output
+# Extract SecretID safely
+- name: Extract SecretID
   ansible.builtin.set_fact:
     consul_master_token: "{{ consul_bootstrap.stdout | regex_search('SecretID:\\s+(\\S+)', '\\1') }}"
-  when: consul_bootstrap.stdout is defined
+  when: consul_bootstrap.stdout is defined and consul_bootstrap.stdout != ""
   run_once: true
+  no_log: true
 
-- name: Save bootstrap token to file
+# Store token securely on server
+- name: Save bootstrap token securely
   ansible.builtin.copy:
     content: "{{ consul_master_token }}"
     dest: /etc/consul.d/bootstrap.token
@@ -32,3 +40,4 @@
     mode: "0600"
   when: consul_master_token is defined
   run_once: true
+  no_log: true
