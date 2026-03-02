@@ -42,3 +42,42 @@
   when: consul_master_token is defined
   run_once: true
   no_log: true
+
+- name: Create agent policy
+  ansible.builtin.command: >
+    consul acl policy create
+    -http-addr=https://127.0.0.1:8501
+    -token={{ consul_master_token }}
+    -name agent-policy
+    -rules 'node_prefix "" { policy = "write" } service_prefix "" { policy = "write" }'
+  run_once: true
+  ignore_errors: true
+  no_log: true
+
+
+# CREATE AGENT TOKEN
+- name: Create agent token
+  ansible.builtin.command: >
+    consul acl token create
+    -http-addr=https://127.0.0.1:8501
+    -token={{ consul_master_token }}
+    -description "Agent Token"
+    -policy-name agent-policy
+    -format=json
+  register: agent_token_output
+  run_once: true
+  no_log: true
+
+- name: Extract agent SecretID
+  ansible.builtin.set_fact:
+    consul_agent_token: "{{ (agent_token_output.stdout | from_json).SecretID }}"
+  when: agent_token_output.stdout is defined and agent_token_output.stdout != ""
+  run_once: true
+  no_log: true
+
+# RESTART CONSUL TO APPLY AGENT TOKEN
+- name: Restart consul after token creation
+  ansible.builtin.systemd:
+    name: consul
+    state: restarted
+  when: consul_agent_token is defined
