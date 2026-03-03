@@ -1,0 +1,29 @@
+- name: Create Read Policy File
+  template:
+    src: read-policy.hcl.j2
+    dest: /tmp/read-policy.hcl
+  run_once: true
+
+- name: Create Read Policy
+  command: >
+    consul acl policy create
+    -name read-policy
+    -rules @/tmp/read-policy.hcl
+    -token {{ consul_master_token }}
+  run_once: true
+
+- name: Create Developer Role
+  command: >
+    consul acl role create
+    -name developer-role
+    -policy-name read-policy
+    -token {{ consul_master_token }}
+  run_once: true
+
+- name: Create Developer Token
+  command: >
+    consul acl token create
+    -description "Developer Token"
+    -role-name developer-role
+    -token {{ consul_master_token }}
+  run_once: true

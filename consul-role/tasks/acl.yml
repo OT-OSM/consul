@@ -1,11 +1,12 @@
-- name: Wait for Consul API
+---
+- name: Wait for Consul HTTPS API
   ansible.builtin.wait_for:
     host: "{{ consul_bind_addr }}"
     port: 8501
     delay: 5
     timeout: 60
 
-# Check if ACL already bootstrapped by querying leader
+# Check if ACL already bootstrapped
 - name: Check if ACL bootstrap already done
   ansible.builtin.command: consul acl policy list
   register: acl_check
@@ -14,7 +15,7 @@
   run_once: true
   no_log: true
 
-# Bootstrap only if ACL not initialized
+# Bootstrap ACL if not initialized
 - name: Bootstrap ACL (only if not already bootstrapped)
   ansible.builtin.command: consul acl bootstrap
   register: consul_bootstrap
@@ -22,3 +23,13 @@
   when: "'Permission denied' in acl_check.stderr or acl_check.rc != 0"
   no_log: true
   failed_when: false
+
+# Extract Bootstrap Token
+- name: Extract Bootstrap Token
+  ansible.builtin.set_fact:
+    consul_master_token: "{{ consul_bootstrap.stdout | regex_search('SecretID:\\s+(.*)', '\\1') }}"
+  when:
+    - consul_bootstrap.stdout is defined
+    - consul_bootstrap.stdout != ""
+  no_log: true
+  run_once: true
