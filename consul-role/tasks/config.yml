@@ -40,4 +40,3 @@
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
     mode: "0644"
-  notify: Restart Consul

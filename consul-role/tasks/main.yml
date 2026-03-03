@@ -15,5 +15,3 @@
 - name: Include ACL tasks
   ansible.builtin.include_tasks: acl.yml
   when: consul_acl_enabled
-  environment:
-    CONSUL_HTTP_TOKEN: "{{ lookup('env','CONSUL_HTTP_TOKEN') }}"
