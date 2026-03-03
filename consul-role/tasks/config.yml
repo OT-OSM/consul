@@ -32,11 +32,3 @@
     group: "{{ consul_group }}"
     mode: "0640"
   notify: Restart Consul
-
-- name: Register web service
-  copy:
-    src: web-service.json
-    dest: "{{ consul_config_dir }}/web-service.json"
-    owner: "{{ consul_user }}"
-    group: "{{ consul_group }}"
-    mode: "0644"
