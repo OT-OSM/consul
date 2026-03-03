@@ -21,12 +21,14 @@ acl {
   default_policy = "{{ consul_acl_default_policy }}"
   enable_token_persistence = {{ consul_acl_token_persistence | lower }}
 
-{% if consul_agent_token != "" %}
+
+  {% if consul_agent_token is defined and consul_agent_token != "" %}
   tokens {
     agent = "{{ consul_agent_token }}"
   }
-{% endif %}
+  {% endif %}
 }
+
 
 ports {
   http  = -1

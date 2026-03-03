@@ -14,14 +14,57 @@
   run_once: true
   no_log: true
 
-# Bootstrap only if ACL not initialized
-- name: Bootstrap ACL (only if not already bootstrapped)
-  ansible.builtin.command: consul acl bootstrap
-  register: consul_bootstrap
+- name: Create agent policy
+  command: >
+    consul acl policy create
+    -name agent-policy
+    -rules @{{ role_path }}/files/policies/agent-policy.hcl
   run_once: true
-  when: "'Permission denied' in acl_check.stderr or acl_check.rc != 0"
-  no_log: true
-  failed_when: false
+  when: "'agent-policy' not in acl_check.stdout"
 
 
+- name: Create agent token
+  command: >
+    consul acl token create
+    -description "Agent Token"
+    -policy-name agent-policy
+    -format json
+  register: agent_token
+  run_once: true
+  when: "'agent-policy' not in acl_check.stdout"
+
+
+
+- name: Extract agent SecretID
+  set_fact:
+    consul_agent_token: "{{ (agent_token.stdout | from_json).SecretID }}"
+  when: agent_token.stdout is defined
+  run_once: true
+
+- name: Save agent token to file
+  copy:
+    content: "{{ consul_agent_token }}"
+    dest: "{{ consul_config_dir }}/agent.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
   when: consul_agent_token is defined
+  run_once: true
+
+- name: Create service policy (optional)
+  command: >
+    consul acl policy create
+    -name web-service-policy
+    -rules @{{ role_path }}/files/policies/service-policy.hcl
+  run_once: true
+  ignore_errors: true
+
+- name: Create service token (optional)
+  command: >
+    consul acl token create
+    -description "Web Service Token"
+    -policy-name web-service-policy
+    -format json
+  register: service_token
+  run_once: true
+  ignore_errors: true
