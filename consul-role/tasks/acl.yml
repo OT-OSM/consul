@@ -5,20 +5,33 @@
     delay: 5
     timeout: 60
 
-# Check if ACL already bootstrapped by querying leader
-- name: Check if ACL bootstrap already done
-  ansible.builtin.command: consul acl policy list
-  register: acl_check
-  failed_when: false
-  changed_when: false
-  run_once: true
-  no_log: true
+- block:
 
-# Bootstrap only if ACL not initialized
-- name: Bootstrap ACL (only if not already bootstrapped)
-  ansible.builtin.command: consul acl bootstrap
-  register: consul_bootstrap
+    - name: Create agent policy
+      command: >
+        consul acl policy create
+        -name agent-policy
+        -rules @{{ role_path }}/files/policies/agent-policy.hcl
+      register: agent_policy
+      failed_when: false
+      changed_when: "'Created' in agent_policy.stdout"
+
+    - name: Create agent token
+      command: >
+        consul acl token create
+        -description "Agent Token"
+        -policy-name agent-policy
+        -format json
+      register: agent_token
+      when: agent_policy.changed
+
+    - name: Extract agent SecretID
+      set_fact:
+        consul_agent_token: "{{ (agent_token.stdout | from_json).SecretID }}"
+      when: agent_token.stdout is defined
+
+  environment:
+    CONSUL_HTTP_ADDR: "https://127.0.0.1:8501"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+    CONSUL_HTTP_TOKEN: "{{ lookup('env','CONSUL_HTTP_TOKEN') }}"
   run_once: true
-  when: "'Permission denied' in acl_check.stderr or acl_check.rc != 0"
-  no_log: true
-  failed_when: false
