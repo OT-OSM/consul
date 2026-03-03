@@ -14,7 +14,7 @@
     consul_cli_env:
       CONSUL_HTTP_ADDR: "https://127.0.0.1:8501"
       CONSUL_HTTP_SSL_VERIFY: "false"
-      CONSUL_HTTP_TOKEN: "{{ lookup('env','CONSUL_HTTP_TOKEN') }}"
+      CONSUL_HTTP_TOKEN: "{{ ansible_env.CONSUL_HTTP_TOKEN }}"
   run_once: true
 
 # --------------------------------------------------
