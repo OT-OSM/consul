@@ -1,9 +1,17 @@
+# --------------------------------------------------
+# WAIT FOR CONSUL API
+# --------------------------------------------------
+
 - name: Wait for Consul API
   ansible.builtin.wait_for:
     host: "{{ consul_bind_addr }}"
     port: 8501
     delay: 5
     timeout: 60
+
+# --------------------------------------------------
+# SET CLI ENVIRONMENT
+# --------------------------------------------------
 
 - name: Set Consul CLI environment
   set_fact:
@@ -14,17 +22,19 @@
   run_once: true
 
 # --------------------------------------------------
-# CHECK EXISTING POLICIES
+# POLICY CHECK
 # --------------------------------------------------
 
 - name: Get existing policies
   command: consul acl policy list
   register: policy_list
   environment: "{{ consul_cli_env }}"
+  changed_when: false
   run_once: true
+  delegate_to: "{{ groups['all'][0] }}"
 
 # --------------------------------------------------
-# CREATE AGENT POLICY (only if missing)
+# CREATE AGENT POLICY
 # --------------------------------------------------
 
 - name: Create agent policy
@@ -33,21 +43,24 @@
     -name agent-policy
     -rules @{{ role_path }}/files/policies/agent-policy.hcl
   environment: "{{ consul_cli_env }}"
-  run_once: true
   when: "'agent-policy' not in policy_list.stdout"
+  run_once: true
+  delegate_to: "{{ groups['all'][0] }}"
 
 # --------------------------------------------------
-# CHECK EXISTING TOKENS
+# TOKEN CHECK
 # --------------------------------------------------
 
 - name: Get existing tokens
   command: consul acl token list
   register: token_list
   environment: "{{ consul_cli_env }}"
+  changed_when: false
   run_once: true
+  delegate_to: "{{ groups['all'][0] }}"
 
 # --------------------------------------------------
-# CREATE AGENT TOKEN (only if missing)
+# CREATE AGENT TOKEN
 # --------------------------------------------------
 
 - name: Create agent token
@@ -58,25 +71,33 @@
     -format json
   register: agent_token
   environment: "{{ consul_cli_env }}"
-  run_once: true
   when: "'Agent Token' not in token_list.stdout"
+  run_once: true
+  delegate_to: "{{ groups['all'][0] }}"
 
-- name: Extract agent SecretID
+# --------------------------------------------------
+# EXTRACT SECRET ID
+# --------------------------------------------------
+
+- name: Set agent token fact
   set_fact:
-    consul_agent_token: "{{ (agent_token.stdout | from_json).SecretID }}"
-  when: agent_token.stdout is defined
+    consul_agent_token: >-
+      {{
+        (agent_token.stdout | from_json).SecretID
+        if agent_token is defined and agent_token.stdout != ""
+        else ""
+      }}
   run_once: true
 
 # --------------------------------------------------
-# STORE TOKEN LOCALLY ON NODE (if created)
+# DISTRIBUTE TOKEN TO ALL NODES
 # --------------------------------------------------
 
-- name: Save agent token to file
+- name: Copy agent token to all nodes
   copy:
-    content: "{{ consul_agent_token }}"
+    content: "{{ hostvars[groups['all'][0]].consul_agent_token }}"
     dest: "{{ consul_config_dir }}/agent.token"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
     mode: "0600"
-  when: consul_agent_token is defined
-  run_once: true
+  when: hostvars[groups['all'][0]].consul_agent_token is defined
