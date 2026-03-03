@@ -5,33 +5,78 @@
     delay: 5
     timeout: 60
 
-- block:
+- name: Set Consul CLI environment
+  set_fact:
+    consul_cli_env:
+      CONSUL_HTTP_ADDR: "https://127.0.0.1:8501"
+      CONSUL_HTTP_SSL_VERIFY: "false"
+      CONSUL_HTTP_TOKEN: "{{ lookup('env','CONSUL_HTTP_TOKEN') }}"
+  run_once: true
 
-    - name: Create agent policy
-      command: >
-        consul acl policy create
-        -name agent-policy
-        -rules @{{ role_path }}/files/policies/agent-policy.hcl
-      register: agent_policy
-      failed_when: false
-      changed_when: "'Created' in agent_policy.stdout"
+# --------------------------------------------------
+# CHECK EXISTING POLICIES
+# --------------------------------------------------
 
-    - name: Create agent token
-      command: >
-        consul acl token create
-        -description "Agent Token"
-        -policy-name agent-policy
-        -format json
-      register: agent_token
-      when: agent_policy.changed
+- name: Get existing policies
+  command: consul acl policy list
+  register: policy_list
+  environment: "{{ consul_cli_env }}"
+  run_once: true
 
-    - name: Extract agent SecretID
-      set_fact:
-        consul_agent_token: "{{ (agent_token.stdout | from_json).SecretID }}"
-      when: agent_token.stdout is defined
+# --------------------------------------------------
+# CREATE AGENT POLICY (only if missing)
+# --------------------------------------------------
 
-  environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:8501"
-    CONSUL_HTTP_SSL_VERIFY: "false"
-    CONSUL_HTTP_TOKEN: "{{ lookup('env','CONSUL_HTTP_TOKEN') }}"
+- name: Create agent policy
+  command: >
+    consul acl policy create
+    -name agent-policy
+    -rules @{{ role_path }}/files/policies/agent-policy.hcl
+  environment: "{{ consul_cli_env }}"
+  run_once: true
+  when: "'agent-policy' not in policy_list.stdout"
+
+# --------------------------------------------------
+# CHECK EXISTING TOKENS
+# --------------------------------------------------
+
+- name: Get existing tokens
+  command: consul acl token list
+  register: token_list
+  environment: "{{ consul_cli_env }}"
+  run_once: true
+
+# --------------------------------------------------
+# CREATE AGENT TOKEN (only if missing)
+# --------------------------------------------------
+
+- name: Create agent token
+  command: >
+    consul acl token create
+    -description "Agent Token"
+    -policy-name agent-policy
+    -format json
+  register: agent_token
+  environment: "{{ consul_cli_env }}"
+  run_once: true
+  when: "'Agent Token' not in token_list.stdout"
+
+- name: Extract agent SecretID
+  set_fact:
+    consul_agent_token: "{{ (agent_token.stdout | from_json).SecretID }}"
+  when: agent_token.stdout is defined
+  run_once: true
+
+# --------------------------------------------------
+# STORE TOKEN LOCALLY ON NODE (if created)
+# --------------------------------------------------
+
+- name: Save agent token to file
+  copy:
+    content: "{{ consul_agent_token }}"
+    dest: "{{ consul_config_dir }}/agent.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  when: consul_agent_token is defined
   run_once: true
