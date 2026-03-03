@@ -1,8 +1,4 @@
-# --------------------------------------------------
-# WAIT FOR CONSUL API
-# --------------------------------------------------
-
-- name: Wait for Consul API
+- name: Wait for Consul API (HTTPS)
   ansible.builtin.wait_for:
     host: "{{ consul_bind_addr }}"
     port: 8501
@@ -10,7 +6,7 @@
     timeout: 60
 
 # --------------------------------------------------
-# SET CLI ENVIRONMENT
+# Set CLI Environment
 # --------------------------------------------------
 
 - name: Set Consul CLI environment
@@ -22,82 +18,69 @@
   run_once: true
 
 # --------------------------------------------------
-# POLICY CHECK
+# GET EXISTING POLICIES
 # --------------------------------------------------
 
 - name: Get existing policies
-  command: consul acl policy list
+  command: "{{ consul_binary_path | default('/usr/local/bin/consul') }} acl policy list"
   register: policy_list
   environment: "{{ consul_cli_env }}"
-  changed_when: false
   run_once: true
-  delegate_to: "{{ groups['all'][0] }}"
 
 # --------------------------------------------------
-# CREATE AGENT POLICY
+# CREATE AGENT POLICY (if missing)
 # --------------------------------------------------
 
 - name: Create agent policy
   command: >
-    consul acl policy create
+    {{ consul_binary_path | default('/usr/local/bin/consul') }} acl policy create
     -name agent-policy
     -rules @{{ role_path }}/files/policies/agent-policy.hcl
   environment: "{{ consul_cli_env }}"
-  when: "'agent-policy' not in policy_list.stdout"
   run_once: true
-  delegate_to: "{{ groups['all'][0] }}"
+  when: "'agent-policy' not in policy_list.stdout"
 
 # --------------------------------------------------
-# TOKEN CHECK
+# GET EXISTING TOKENS
 # --------------------------------------------------
 
 - name: Get existing tokens
-  command: consul acl token list
+  command: "{{ consul_binary_path | default('/usr/local/bin/consul') }} acl token list"
   register: token_list
   environment: "{{ consul_cli_env }}"
-  changed_when: false
   run_once: true
-  delegate_to: "{{ groups['all'][0] }}"
 
 # --------------------------------------------------
-# CREATE AGENT TOKEN
+# CREATE AGENT TOKEN (if missing)
 # --------------------------------------------------
 
 - name: Create agent token
   command: >
-    consul acl token create
+    {{ consul_binary_path | default('/usr/local/bin/consul') }} acl token create
     -description "Agent Token"
     -policy-name agent-policy
     -format json
   register: agent_token
   environment: "{{ consul_cli_env }}"
+  run_once: true
   when: "'Agent Token' not in token_list.stdout"
-  run_once: true
-  delegate_to: "{{ groups['all'][0] }}"
 
-# --------------------------------------------------
-# EXTRACT SECRET ID
-# --------------------------------------------------
-
-- name: Set agent token fact
+- name: Extract agent SecretID
   set_fact:
-    consul_agent_token: >-
-      {{
-        (agent_token.stdout | from_json).SecretID
-        if agent_token is defined and agent_token.stdout != ""
-        else ""
-      }}
+    consul_agent_token: "{{ (agent_token.stdout | from_json).SecretID }}"
+  when: agent_token.stdout is defined
   run_once: true
 
 # --------------------------------------------------
-# DISTRIBUTE TOKEN TO ALL NODES
+# SAVE TOKEN TO CONFIG
 # --------------------------------------------------
 
-- name: Copy agent token to all nodes
+- name: Save agent token to file
   copy:
-    content: "{{ hostvars[groups['all'][0]].consul_agent_token }}"
+    content: "{{ consul_agent_token }}"
     dest: "{{ consul_config_dir }}/agent.token"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
     mode: "0600"
-  when: hostvars[groups['all'][0]].consul_agent_token is defined
+  when: consul_agent_token is defined
+  run_once: true
