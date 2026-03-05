@@ -17,7 +17,7 @@
   changed_when: false
   run_once: true
   environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:8501"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
@@ -30,7 +30,7 @@
   when: "'read-policy' not in policy_list.stdout"
   run_once: true
   environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:8501"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
@@ -44,7 +44,7 @@
   changed_when: false
   run_once: true
   environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:8501"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
@@ -57,7 +57,7 @@
   when: "'read-role' not in role_list.stdout"
   run_once: true
   environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:8501"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
@@ -70,7 +70,7 @@
   register: app_token
   run_once: true
   environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:8501"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
