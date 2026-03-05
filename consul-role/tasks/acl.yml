@@ -13,6 +13,9 @@
   changed_when: false
   run_once: true
   no_log: true
+  environment:
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
 
 - name: Bootstrap ACL (only once)
   ansible.builtin.command: consul acl bootstrap
@@ -21,6 +24,8 @@
   when: acl_check.rc != 0
   no_log: true
   failed_when: false
+  environment:
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
 
 - name: Extract bootstrap token
   ansible.builtin.set_fact:
@@ -43,4 +48,3 @@
 
 - name: Create ACL tokens
   ansible.builtin.include_tasks: acl_tokens.yml
-
