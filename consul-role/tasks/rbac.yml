@@ -9,7 +9,7 @@
     consul acl policy create
     -name read-policy
     -rules @/tmp/read-policy.hcl
-    -token {{ consul_master_token }}
+    -token {{ hostvars['localhost']['consul_master_token'] }}
   run_once: true
 
 - name: Create Developer Role
@@ -17,7 +17,7 @@
     consul acl role create
     -name developer-role
     -policy-name read-policy
-    -token {{ consul_master_token }}
+    -token {{ hostvars['localhost']['consul_master_token'] }}
   run_once: true
 
 - name: Create Developer Token
@@ -25,5 +25,5 @@
     consul acl token create
     -description "Developer Token"
     -role-name developer-role
-    -token {{ consul_master_token }}
+    -token {{ hostvars['localhost']['consul_master_token'] }}
   run_once: true

@@ -22,11 +22,10 @@
   no_log: true
   failed_when: false
 
-- name: Set consul_master_token if bootstrapped now
-  ansible.builtin.set_fact:
+- name: Set consul_master_token globally
+  set_fact:
     consul_master_token: "{{ consul_bootstrap.stdout | regex_search('SecretID:\\s+(.*)', '\\1') }}"
-  when:
-    - consul_bootstrap.stdout is defined
-    - consul_bootstrap.stdout != ""
   run_once: true
+  delegate_to: localhost
+  delegate_facts: true
   no_log: true
