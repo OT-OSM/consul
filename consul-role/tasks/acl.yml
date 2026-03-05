@@ -28,6 +28,16 @@
   when: consul_bootstrap.stdout is defined
   run_once: true
 
+- name: Save bootstrap token
+  ansible.builtin.copy:
+    content: "{{ consul_master_token }}"
+    dest: "{{ consul_config_dir }}/bootstrap.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  when: consul_master_token is defined
+  run_once: true
+
 - name: Create ACL policies
   ansible.builtin.include_tasks: acl_policies.yml
 
