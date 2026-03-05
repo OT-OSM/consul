@@ -1,3 +1,4 @@
+
 ---
 # -------------------------
 # COPY POLICY FILE
@@ -11,6 +12,26 @@
 - name: Debug Token Presence
   debug:
     msg: "The token value is: {{ lookup('env','consul_master_token') }}"
+  run_once: true
+
+# -------------------------
+# LOAD THE TOKEN FIRST
+# -------------------------
+- name: Load existing bootstrap token from server
+  ansible.builtin.slurp:
+    src: "{{ consul_config_dir }}/bootstrap.token"
+  register: bootstrap_file
+  run_once: true
+
+- name: Set token fact for subsequent tasks
+  ansible.builtin.set_fact:
+    consul_master_token: "{{ bootstrap_file.content | b64decode | trim }}"
+  run_once: true
+
+# Now your debug will actually show something!
+- name: Debug Token Presence
+  ansible.builtin.debug:
+    msg: "The token value is now loaded: {{ consul_master_token }}"
   run_once: true
 
 # -------------------------
