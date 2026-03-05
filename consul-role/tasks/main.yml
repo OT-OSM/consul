@@ -14,7 +14,3 @@
 
 - name: Include service tasks
   ansible.builtin.include_tasks: service.yml
-
-- name: Include RBAC tasks
-  ansible.builtin.include_tasks: rbac.yml
-  when: consul_acl_enabled
