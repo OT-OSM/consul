@@ -2,10 +2,13 @@
 # -------------------------
 # 1. LOAD OR GENERATE TOKEN
 # -------------------------
-- name: Check if bootstrap token file exists
-  ansible.builtin.stat:
-    path: "{{ consul_config_dir }}/bootstrap.token"
-  register: token_file_stat
+
+# Verify Consul master token exists
+
+- name: Verify Consul master token exists
+  ansible.builtin.fail:
+    msg: "consul_master_token is not defined or empty"
+  when: consul_master_token is not defined or consul_master_token == ""
   run_once: true
 
 - name: Load existing token from file
