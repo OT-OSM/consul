@@ -22,10 +22,3 @@
   no_log: true
   failed_when: false
 
-- name: Set consul_master_token globally
-  set_fact:
-    consul_master_token: "{{ consul_bootstrap.stdout | regex_search('SecretID:\\s+(.*)', '\\1') }}"
-  run_once: true
-  delegate_to: localhost
-  delegate_facts: true
-  no_log: true
