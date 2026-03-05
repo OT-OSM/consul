@@ -23,6 +23,11 @@
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
     CONSUL_HTTP_SSL_VERIFY: "false"
 
+- name: Debug Token Presence
+  debug:
+    msg: "The token value is: {{ lookup('env','consul_master_token') }}"
+  run_once: true
+
 # -------------------------
 # CREATE POLICY
 # -------------------------
