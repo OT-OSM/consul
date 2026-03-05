@@ -1,7 +1,59 @@
-
 ---
 # -------------------------
-# COPY POLICY FILE
+# 1. LOAD OR GENERATE TOKEN
+# -------------------------
+- name: Check if bootstrap token file exists
+  ansible.builtin.stat:
+    path: "{{ consul_config_dir }}/bootstrap.token"
+  register: token_file_stat
+  run_once: true
+
+- name: Load existing token from file
+  ansible.builtin.slurp:
+    src: "{{ consul_config_dir }}/bootstrap.token"
+  register: slurped_token
+  when: token_file_stat.stat.exists and token_file_stat.stat.size > 0
+  run_once: true
+
+- name: Set token fact from file
+  ansible.builtin.set_fact:
+    consul_master_token: "{{ slurped_token.content | b64decode | trim }}"
+  when: slurped_token.content is defined
+  run_once: true
+
+- name: Bootstrap ACL if token is missing
+  ansible.builtin.command: consul acl bootstrap
+  register: bootstrap_output
+  run_once: true
+  # Only run if the variable is still empty/undefined
+  when: consul_master_token is not defined or consul_master_token == ""
+  failed_when: false # Ignore if already bootstrapped previously
+
+- name: Extract and Save New Token
+  block:
+    - name: Parse SecretID from bootstrap
+      ansible.builtin.set_fact:
+        consul_master_token: "{{ bootstrap_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') }}"
+      when: bootstrap_output.rc == 0
+
+    - name: Save new token to server
+      ansible.builtin.copy:
+        content: "{{ consul_master_token }}"
+        dest: "{{ consul_config_dir }}/bootstrap.token"
+        owner: "{{ consul_user }}"
+        mode: "0600"
+      when: consul_master_token is defined and consul_master_token != ""
+  when: bootstrap_output.changed
+  run_once: true
+
+- name: Verify Token is Loaded
+  ansible.builtin.fail:
+    msg: "FATAL: Could not find a valid Consul token in {{ consul_config_dir }}/bootstrap.token and bootstrap failed."
+  when: consul_master_token is not defined or consul_master_token == ""
+  run_once: true
+
+# -------------------------
+# 2. POLICIES AND ROLES
 # -------------------------
 - name: Copy read policy file
   ansible.builtin.copy:
@@ -9,34 +61,6 @@
     dest: /tmp/read-policy.hcl
     mode: "0644"
 
-- name: Debug Token Presence
-  debug:
-    msg: "The token value is: {{ lookup('env','consul_master_token') }}"
-  run_once: true
-
-# -------------------------
-# LOAD THE TOKEN FIRST
-# -------------------------
-- name: Load existing bootstrap token from server
-  ansible.builtin.slurp:
-    src: "{{ consul_config_dir }}/bootstrap.token"
-  register: bootstrap_file
-  run_once: true
-
-- name: Set token fact for subsequent tasks
-  ansible.builtin.set_fact:
-    consul_master_token: "{{ bootstrap_file.content | b64decode | trim }}"
-  run_once: true
-
-# Now your debug will actually show something!
-- name: Debug Token Presence
-  ansible.builtin.debug:
-    msg: "The token value is now loaded: {{ consul_master_token }}"
-  run_once: true
-
-# -------------------------
-# CHECK EXISTING POLICIES
-# -------------------------
 - name: Check existing policies
   ansible.builtin.command: consul acl policy list
   register: policy_list
@@ -49,10 +73,6 @@
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
     CONSUL_HTTP_SSL_VERIFY: "false"
 
-
-# -------------------------
-# CREATE POLICY
-# -------------------------
 - name: Create read policy
   ansible.builtin.command: consul acl policy create -name read-policy -rules @/tmp/read-policy.hcl
   when: "'read-policy' not in policy_list.stdout"
@@ -64,9 +84,6 @@
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
     CONSUL_HTTP_SSL_VERIFY: "false"
 
-# -------------------------
-# CHECK ROLES
-# -------------------------
 - name: Check existing roles
   ansible.builtin.command: consul acl role list
   register: role_list
@@ -79,9 +96,6 @@
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
     CONSUL_HTTP_SSL_VERIFY: "false"
 
-# -------------------------
-# CREATE ROLE
-# -------------------------
 - name: Create read role
   ansible.builtin.command: consul acl role create -name read-role -policy-name read-policy
   when: "'read-role' not in role_list.stdout"
@@ -93,9 +107,6 @@
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
     CONSUL_HTTP_SSL_VERIFY: "false"
 
-# -------------------------
-# CREATE APPLICATION TOKEN
-# -------------------------
 - name: Create application token
   ansible.builtin.command: consul acl token create -description "App Read Token" -role-name read-role
   register: app_token
