@@ -1,22 +1,59 @@
+---
 - name: Copy read policy file
-  copy:
+  ansible.builtin.copy:
     src: read-policy.hcl
     dest: /tmp/read-policy.hcl
+    mode: "0644"
 
+# -------------------------
+# CHECK POLICY
+# -------------------------
+- name: Check existing policies
+  ansible.builtin.command: consul acl policy list
+  register: policy_list
+  environment:
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  changed_when: false
+  run_once: true
+
+# -------------------------
+# CREATE POLICY
+# -------------------------
 - name: Create read policy
-  command: consul acl policy create -name read-policy -rules @/tmp/read-policy.hcl
+  ansible.builtin.command: consul acl policy create -name read-policy -rules @/tmp/read-policy.hcl
   environment:
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  when: "'read-policy' not in policy_list.stdout"
   run_once: true
 
+# -------------------------
+# CHECK ROLES
+# -------------------------
+- name: Check existing roles
+  ansible.builtin.command: consul acl role list
+  register: role_list
+  environment:
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  changed_when: false
+  run_once: true
+
+# -------------------------
+# CREATE ROLE
+# -------------------------
 - name: Create read role
-  command: consul acl role create -name read-role -policy-name read-policy
+  ansible.builtin.command: consul acl role create -name read-role -policy-name read-policy
   environment:
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  when: "'read-role' not in role_list.stdout"
   run_once: true
 
+# -------------------------
+# CREATE APPLICATION TOKEN
+# -------------------------
 - name: Create application token
-  command: consul acl token create -description "App Read Token" -role-name read-role
+  ansible.builtin.command: consul acl token create -description "App Read Token" -role-name read-role
   environment:
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  register: app_token
   run_once: true
+
