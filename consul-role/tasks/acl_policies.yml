@@ -1,0 +1,22 @@
+---
+- name: Copy policy files
+  ansible.builtin.template:
+    src: "policies/{{ item }}.hcl.j2"
+    dest: "/tmp/{{ item }}.hcl"
+  loop:
+    - agent-policy
+    - service-policy
+    - readonly-policy
+
+- name: Create Consul policies
+  ansible.builtin.command: >
+    consul acl policy create
+    -name {{ item }}
+    -rules @/tmp/{{ item }}.hcl
+    -token {{ consul_master_token }}
+  loop:
+    - agent-policy
+    - service-policy
+    - readonly-policy
+  run_once: true
+  failed_when: false
