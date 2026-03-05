@@ -1,0 +1,30 @@
+---
+- name: Create agent token
+  ansible.builtin.command: >
+    consul acl token create
+    -description "Agent Token"
+    -policy-name agent-policy
+    -token {{ consul_master_token }}
+  register: agent_token
+  run_once: true
+  failed_when: false
+
+- name: Create service token
+  ansible.builtin.command: >
+    consul acl token create
+    -description "Service Token"
+    -policy-name service-policy
+    -token {{ consul_master_token }}
+  register: service_token
+  run_once: true
+  failed_when: false
+
+- name: Create readonly token
+  ansible.builtin.command: >
+    consul acl token create
+    -description "Readonly Token"
+    -policy-name readonly-policy
+    -token {{ consul_master_token }}
+  register: readonly_token
+  run_once: true
+  failed_when: false
