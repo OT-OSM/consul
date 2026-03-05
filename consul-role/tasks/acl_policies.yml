@@ -13,10 +13,13 @@
     consul acl policy create
     -name {{ item }}
     -rules @/tmp/{{ item }}.hcl
-    -token {{ consul_master_token }}
   loop:
     - agent-policy
     - service-policy
     - readonly-policy
   run_once: true
   failed_when: false
+  environment:
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
