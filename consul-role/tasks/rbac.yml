@@ -1,0 +1,22 @@
+- name: Copy read policy file
+  copy:
+    src: read-policy.hcl
+    dest: /tmp/read-policy.hcl
+
+- name: Create read policy
+  command: consul acl policy create -name read-policy -rules @/tmp/read-policy.hcl
+  environment:
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  run_once: true
+
+- name: Create read role
+  command: consul acl role create -name read-role -policy-name read-policy
+  environment:
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  run_once: true
+
+- name: Create application token
+  command: consul acl token create -description "App Read Token" -role-name read-role
+  environment:
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  run_once: true
