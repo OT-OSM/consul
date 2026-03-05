@@ -22,3 +22,9 @@
   no_log: true
   failed_when: false
 
+- name: Extract bootstrap token
+  ansible.builtin.set_fact:
+    consul_master_token: "{{ consul_bootstrap.stdout | regex_search('SecretID:\\s+(\\S+)', '\\1') }}"
+  when: consul_bootstrap.stdout is defined
+  run_once: true
+
