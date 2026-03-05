@@ -1,14 +1,10 @@
-- name: Create Read Policy File
-  template:
-    src: read-policy.hcl.j2
-    dest: /tmp/read-policy.hcl
-  run_once: true
-
 - name: Create Read Policy
   command: >
     consul acl policy create
     -name read-policy
     -rules @/tmp/read-policy.hcl
+  environment:
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
   run_once: true
 
 - name: Create Developer Role
@@ -16,6 +12,8 @@
     consul acl role create
     -name developer-role
     -policy-name read-policy
+  environment:
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
   run_once: true
 
 - name: Create Developer Token
@@ -23,4 +21,6 @@
     consul acl token create
     -description "Developer Token"
     -role-name developer-role
+  environment:
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
   run_once: true
