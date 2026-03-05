@@ -2,87 +2,89 @@
 
 - name: Create agent token
   ansible.builtin.command: >
-  consul acl token create
-  -description "Agent Token"
-  -policy-name agent-policy
+    consul acl token create
+    -description "Agent Token"
+    -policy-name agent-policy
   register: agent_token
   run_once: true
   failed_when: false
   environment:
-  CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-  CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-  CONSUL_HTTP_SSL_VERIFY: "false"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
 
 - name: Extract agent token
   ansible.builtin.set_fact:
-  consul_agent_token_generated: "{{ agent_token.stdout | regex_search('SecretID:\s+(\S+)', '\1') }}"
+    consul_agent_token_generated: "{{ agent_token.stdout | regex_search('SecretID:\\s+(\\S+)', '\\1') }}"
   when: agent_token.stdout is defined
   run_once: true
 
 - name: Save agent token
   ansible.builtin.copy:
-  content: "{{ consul_agent_token_generated }}"
-  dest: "{{ consul_config_dir }}/agent.token"
-  owner: "{{ consul_user }}"
-  group: "{{ consul_group }}"
-  mode: "0600"
+    content: "{{ consul_agent_token_generated }}"
+    dest: "{{ consul_config_dir }}/agent.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
   when: consul_agent_token_generated is defined
   run_once: true
 
+
 - name: Create service token
   ansible.builtin.command: >
-  consul acl token create
-  -description "Service Token"
-  -policy-name service-policy
+    consul acl token create
+    -description "Service Token"
+    -policy-name service-policy
   register: service_token
   run_once: true
   failed_when: false
   environment:
-  CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-  CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-  CONSUL_HTTP_SSL_VERIFY: "false"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
 
 - name: Extract service token
   ansible.builtin.set_fact:
-  consul_service_token_generated: "{{ service_token.stdout | regex_search('SecretID:\s+(\S+)', '\1') }}"
+    consul_service_token_generated: "{{ service_token.stdout | regex_search('SecretID:\\s+(\\S+)', '\\1') }}"
   when: service_token.stdout is defined
   run_once: true
 
 - name: Save service token
   ansible.builtin.copy:
-  content: "{{ consul_service_token_generated }}"
-  dest: "{{ consul_config_dir }}/service.token"
-  owner: "{{ consul_user }}"
-  group: "{{ consul_group }}"
-  mode: "0600"
+    content: "{{ consul_service_token_generated }}"
+    dest: "{{ consul_config_dir }}/service.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
   when: consul_service_token_generated is defined
   run_once: true
 
+
 - name: Create readonly token
   ansible.builtin.command: >
-  consul acl token create
-  -description "Readonly Token"
-  -policy-name readonly-policy
+    consul acl token create
+    -description "Readonly Token"
+    -policy-name readonly-policy
   register: readonly_token
   run_once: true
   failed_when: false
   environment:
-  CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-  CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-  CONSUL_HTTP_SSL_VERIFY: "false"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
 
 - name: Extract readonly token
   ansible.builtin.set_fact:
-  consul_readonly_token_generated: "{{ readonly_token.stdout | regex_search('SecretID:\s+(\S+)', '\1') }}"
+    consul_readonly_token_generated: "{{ readonly_token.stdout | regex_search('SecretID:\\s+(\\S+)', '\\1') }}"
   when: readonly_token.stdout is defined
   run_once: true
 
 - name: Save readonly token
   ansible.builtin.copy:
-  content: "{{ consul_readonly_token_generated }}"
-  dest: "{{ consul_config_dir }}/readonly.token"
-  owner: "{{ consul_user }}"
-  group: "{{ consul_group }}"
-  mode: "0600"
+    content: "{{ consul_readonly_token_generated }}"
+    dest: "{{ consul_config_dir }}/readonly.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
   when: consul_readonly_token_generated is defined
   run_once: true
