@@ -1,6 +1,6 @@
 ---
 
-* name: Create agent token
+- name: Create agent token
   ansible.builtin.command: >
   consul acl token create
   -description "Agent Token"
@@ -13,13 +13,13 @@
   CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
   CONSUL_HTTP_SSL_VERIFY: "false"
 
-* name: Extract agent token
+- name: Extract agent token
   ansible.builtin.set_fact:
   consul_agent_token_generated: "{{ agent_token.stdout | regex_search('SecretID:\s+(\S+)', '\1') }}"
   when: agent_token.stdout is defined
   run_once: true
 
-* name: Save agent token
+- name: Save agent token
   ansible.builtin.copy:
   content: "{{ consul_agent_token_generated }}"
   dest: "{{ consul_config_dir }}/agent.token"
@@ -29,7 +29,7 @@
   when: consul_agent_token_generated is defined
   run_once: true
 
-* name: Create service token
+- name: Create service token
   ansible.builtin.command: >
   consul acl token create
   -description "Service Token"
@@ -42,13 +42,13 @@
   CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
   CONSUL_HTTP_SSL_VERIFY: "false"
 
-* name: Extract service token
+- name: Extract service token
   ansible.builtin.set_fact:
   consul_service_token_generated: "{{ service_token.stdout | regex_search('SecretID:\s+(\S+)', '\1') }}"
   when: service_token.stdout is defined
   run_once: true
 
-* name: Save service token
+- name: Save service token
   ansible.builtin.copy:
   content: "{{ consul_service_token_generated }}"
   dest: "{{ consul_config_dir }}/service.token"
@@ -58,7 +58,7 @@
   when: consul_service_token_generated is defined
   run_once: true
 
-* name: Create readonly token
+- name: Create readonly token
   ansible.builtin.command: >
   consul acl token create
   -description "Readonly Token"
@@ -71,13 +71,13 @@
   CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
   CONSUL_HTTP_SSL_VERIFY: "false"
 
-* name: Extract readonly token
+- name: Extract readonly token
   ansible.builtin.set_fact:
   consul_readonly_token_generated: "{{ readonly_token.stdout | regex_search('SecretID:\s+(\S+)', '\1') }}"
   when: readonly_token.stdout is defined
   run_once: true
 
-* name: Save readonly token
+- name: Save readonly token
   ansible.builtin.copy:
   content: "{{ consul_readonly_token_generated }}"
   dest: "{{ consul_config_dir }}/readonly.token"
