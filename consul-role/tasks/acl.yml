@@ -47,7 +47,7 @@
     - "'SecretID' in consul_bootstrap.stdout"
   run_once: true
 
-# D. Share this token with all other hosts (.35 and .138)
+# D. Share this token with all other hosts
 - name: Propagate token to all hosts in the play
   ansible.builtin.set_fact:
     consul_master_token: "{{ hostvars[ansible_play_hosts[0]]['consul_master_token'] }}"
