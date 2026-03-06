@@ -1,9 +1,4 @@
 ---
-# -------------------------
-# POLICIES AND ROLES ONLY
-# (Bootstrap logic removed because it is handled in acl.yml)
-# -------------------------
-
 - name: Copy read policy file
   ansible.builtin.copy:
     src: read-policy.hcl
@@ -15,7 +10,7 @@
   register: policy_list
   changed_when: false
   run_once: true
-  environment:
+  environment: &consul_env
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
@@ -26,43 +21,32 @@
   ansible.builtin.command: consul acl policy create -name read-policy -rules @/tmp/read-policy.hcl
   when: "'read-policy' not in policy_list.stdout"
   run_once: true
-  environment:
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
-    CONSUL_HTTP_SSL_VERIFY: "false"
+  environment: *consul_env
 
 - name: Check existing roles
   ansible.builtin.command: consul acl role list
   register: role_list
   changed_when: false
   run_once: true
-  environment:
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
-    CONSUL_HTTP_SSL_VERIFY: "false"
+  environment: *consul_env
 
 - name: Create read role
   ansible.builtin.command: consul acl role create -name read-role -policy-name read-policy
   when: "'read-role' not in role_list.stdout"
   run_once: true
-  environment:
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
-    CONSUL_HTTP_SSL_VERIFY: "false"
+  environment: *consul_env
+
+# NEW CHECK (IMPORTANT)
+- name: Check existing tokens
+  ansible.builtin.command: consul acl token list
+  register: token_list
+  changed_when: false
+  run_once: true
+  environment: *consul_env
 
 - name: Create application token
   ansible.builtin.command: consul acl token create -description "App Read Token" -role-name read-role
   register: app_token
+  when: "'App Read Token' not in token_list.stdout"
   run_once: true
-  environment:
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
-    CONSUL_HTTP_SSL_VERIFY: "false"
+  environment: *consul_env
