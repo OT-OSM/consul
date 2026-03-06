@@ -18,7 +18,6 @@
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_HTTP_SSL_VERIFY: "false"
-    # Add these if your Consul uses TLS certificates:
     CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
 
