@@ -1,77 +1,9 @@
 ---
 # -------------------------
-# 1. LOAD OR GENERATE TOKEN
+# POLICIES AND ROLES ONLY
+# (Bootstrap logic removed because it is handled in acl.yml)
 # -------------------------
 
-# Verify Consul master token exists
-
-- name: Verify Consul master token exists
-  ansible.builtin.fail:
-    msg: "consul_master_token is not defined or empty"
-  when: consul_master_token is not defined or consul_master_token == ""
-  run_once: true
-
-- name: Load existing token from file
-  ansible.builtin.slurp:
-    src: "{{ consul_config_dir }}/bootstrap.token"
-  register: slurped_token
-  when: token_file_stat.stat.exists and token_file_stat.stat.size > 0
-  run_once: true
-
-- name: Set token fact from file
-  ansible.builtin.set_fact:
-    consul_master_token: "{{ slurped_token.content | b64decode | trim }}"
-  when: 
-    - token_file_stat.stat.exists 
-    - slurped_token.content is defined
-  run_once: true
-
-- name: Bootstrap ACL if token is missing
-  ansible.builtin.command: consul acl bootstrap
-  register: bootstrap_output
-  run_once: true
-  # Only run if we haven't successfully loaded a token yet
-  when: consul_master_token is not defined or consul_master_token == "" or consul_master_token == "[]"
-  failed_when: false 
-
-- name: Debug Bootstrap Output (If changed)
-  ansible.builtin.debug:
-    var: bootstrap_output.stdout
-  when: bootstrap_output.changed
-  run_once: true
-
-- name: Extract SecretID from bootstrap output
-  ansible.builtin.set_fact:
-    # Uses a more precise regex for UUIDs and picks the first match
-    consul_master_token: "{{ bootstrap_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
-  when: 
-    - bootstrap_output.stdout is defined
-    - "'SecretID:' in bootstrap_output.stdout"
-  run_once: true
-
-- name: Save new token to server
-  ansible.builtin.copy:
-    content: "{{ consul_master_token }}"
-    dest: "{{ consul_config_dir }}/bootstrap.token"
-    owner: "{{ consul_user }}"
-    group: "{{ consul_group }}"
-    mode: "0600"
-  when: 
-    - bootstrap_output.changed
-    - consul_master_token is defined
-    - consul_master_token != ""
-    - consul_master_token != "[]"
-  run_once: true
-
-- name: Verify Token is Loaded
-  ansible.builtin.fail:
-    msg: "FATAL: Variable 'consul_master_token' is empty. If 'Already bootstrapped' error appeared, check /etc/consul.d/bootstrap.token on the server."
-  when: consul_master_token is not defined or consul_master_token == "" or consul_master_token == "[]"
-  run_once: true
-
-# -------------------------
-# 2. POLICIES AND ROLES
-# -------------------------
 - name: Copy read policy file
   ansible.builtin.copy:
     src: read-policy.hcl
