@@ -1,6 +1,7 @@
 ---
 - name: Create Agent Token
   block:
+
     - name: Check if agent token exists on disk
       ansible.builtin.stat:
         path: "{{ consul_config_dir }}/agent.token"
@@ -12,7 +13,7 @@
       register: agent_token_output
       when: not agent_token_stat.stat.exists
       run_once: true
-      environment:
+      environment: &consul_env
         CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
         CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
         CONSUL_HTTP_SSL_VERIFY: "false"
@@ -24,7 +25,7 @@
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
         mode: "0600"
-      when: 
+      when:
         - not agent_token_stat.stat.exists
         - agent_token_output.stdout is defined
         - "'SecretID' in agent_token_output.stdout"
@@ -32,6 +33,7 @@
 
 - name: Create Service Token
   block:
+
     - name: Check if service token exists on disk
       ansible.builtin.stat:
         path: "{{ consul_config_dir }}/service.token"
@@ -43,10 +45,7 @@
       register: service_token_output
       when: not service_token_stat.stat.exists
       run_once: true
-      environment:
-        CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-        CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-        CONSUL_HTTP_SSL_VERIFY: "false"
+      environment: *consul_env
 
     - name: Save service token
       ansible.builtin.copy:
@@ -55,7 +54,7 @@
         owner: "{{ consul_user }}"
         group: "{{ consul_group }}"
         mode: "0600"
-      when: 
+      when:
         - not service_token_stat.stat.exists
         - service_token_output.stdout is defined
         - "'SecretID' in service_token_output.stdout"
