@@ -3,6 +3,8 @@ bind_addr = "{{ consul_bind_addr }}"
 client_addr = "{{ consul_client_addr }}"
 data_dir = "{{ consul_data_dir }}"
 
+encrypt = "{{ consul_gossip_key }}"
+
 server = {{ consul_is_server | lower }}
 bootstrap_expect = {{ consul_bootstrap_expect }}
 
