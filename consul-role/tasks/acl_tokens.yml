@@ -1,34 +1,32 @@
 ---
 
-- name: Create agent token
-  ansible.builtin.command: >
-    consul acl token create
-    -description "Agent Token"
-    -policy-name agent-policy
-  register: agent_token
-  run_once: true
-  failed_when: false
-  environment:
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_HTTP_SSL_VERIFY: "false"
+- name: Create Consul Tokens
+  block:
+    - name: Check if agent token exists on disk
+      ansible.builtin.stat:
+        path: "{{ consul_config_dir }}/agent.token"
+      register: agent_token_stat
 
-- name: Extract agent token
-  ansible.builtin.set_fact:
-    consul_agent_token_generated: "{{ agent_token.stdout | regex_search('SecretID:\\s+(\\S+)', '\\1') }}"
-  when: agent_token.stdout is defined
-  run_once: true
+    - name: Create agent token
+      ansible.builtin.command: >
+        consul acl token create -description "Agent Token" -policy-name agent-policy
+      register: agent_token_output
+      when: not agent_token_stat.stat.exists
+      run_once: true
+      environment: *consul_env
 
-- name: Save agent token
-  ansible.builtin.copy:
-    content: "{{ consul_agent_token_generated }}"
-    dest: "{{ consul_config_dir }}/agent.token"
-    owner: "{{ consul_user }}"
-    group: "{{ consul_group }}"
-    mode: "0600"
-  when: consul_agent_token_generated is defined
-  run_once: true
-
+    - name: Save agent token
+      ansible.builtin.copy:
+        # Use regex_search and | first for clean extraction
+        content: "{{ agent_token_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
+        dest: "{{ consul_config_dir }}/agent.token"
+        owner: "{{ consul_user }}"
+        group: "{{ consul_group }}"
+        mode: "0600"
+      when: 
+        - not agent_token_stat.stat.exists
+        - agent_token_output.stdout is defined
+      run_once: true
 
 - name: Create service token
   ansible.builtin.command: >
