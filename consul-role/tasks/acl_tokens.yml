@@ -1,4 +1,15 @@
 ---
+# NEW TASK (IMPORTANT)
+- name: Check existing tokens in consul
+  ansible.builtin.command: consul acl token list
+  register: existing_tokens
+  changed_when: false
+  run_once: true
+  environment: &consul_env
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+
 - name: Create Agent Token
   block:
 
@@ -11,12 +22,11 @@
       ansible.builtin.command: >
         consul acl token create -description "Agent Token" -policy-name agent-policy
       register: agent_token_output
-      when: not agent_token_stat.stat.exists
+      when:
+        - not agent_token_stat.stat.exists
+        - "'Agent Token' not in existing_tokens.stdout"
       run_once: true
-      environment: &consul_env
-        CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-        CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-        CONSUL_HTTP_SSL_VERIFY: "false"
+      environment: *consul_env
 
     - name: Save agent token
       ansible.builtin.copy:
@@ -43,7 +53,9 @@
       ansible.builtin.command: >
         consul acl token create -description "Service Token" -policy-name service-policy
       register: service_token_output
-      when: not service_token_stat.stat.exists
+      when:
+        - not service_token_stat.stat.exists
+        - "'Service Token' not in existing_tokens.stdout"
       run_once: true
       environment: *consul_env
 
