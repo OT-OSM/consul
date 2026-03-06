@@ -36,17 +36,36 @@
   run_once: true
   environment: *consul_env
 
-# NEW CHECK (IMPORTANT)
-- name: Check existing tokens
-  ansible.builtin.command: consul acl token list
-  register: token_list
-  changed_when: false
+
+# ------------------------------------------------
+# APPLICATION TOKEN (NO DUPLICATES)
+# ------------------------------------------------
+
+- name: Check if application token exists on disk
+  ansible.builtin.stat:
+    path: "{{ consul_config_dir }}/app.token"
+  register: app_token_stat
+  run_once: true
+
+- name: Create application token
+  ansible.builtin.command: >
+    consul acl token create
+    -description "App Read Token"
+    -role-name read-role
+  register: app_token_output
+  when: not app_token_stat.stat.exists
   run_once: true
   environment: *consul_env
 
-- name: Create application token
-  ansible.builtin.command: consul acl token create -description "App Read Token" -role-name read-role
-  register: app_token
-  when: "'App Read Token' not in token_list.stdout"
+- name: Save application token
+  ansible.builtin.copy:
+    content: "{{ app_token_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
+    dest: "{{ consul_config_dir }}/app.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  when:
+    - not app_token_stat.stat.exists
+    - app_token_output.stdout is defined
+    - "'SecretID' in app_token_output.stdout"
   run_once: true
-  environment: *consul_env
