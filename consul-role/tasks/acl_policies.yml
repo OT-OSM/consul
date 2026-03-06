@@ -3,23 +3,32 @@
   ansible.builtin.template:
     src: "policies/{{ item }}.hcl.j2"
     dest: "/tmp/{{ item }}.hcl"
+    mode: "0644"
   loop:
     - agent-policy
     - service-policy
     - readonly-policy
 
+- name: List existing policies
+  ansible.builtin.command: consul acl policy list
+  register: existing_policies
+  run_once: true
+  changed_when: false
+  environment: &consul_env
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+    # Add these if your Consul uses TLS certificates:
+    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
+
 - name: Create Consul policies
   ansible.builtin.command: >
-    consul acl policy create
-    -name {{ item }}
-    -rules @/tmp/{{ item }}.hcl
+    consul acl policy create -name {{ item }} -rules @/tmp/{{ item }}.hcl
   loop:
     - agent-policy
     - service-policy
     - readonly-policy
+  when: item not in existing_policies.stdout
   run_once: true
-  failed_when: false
-  environment:
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_HTTP_SSL_VERIFY: "false"
+  environment: *consul_env
