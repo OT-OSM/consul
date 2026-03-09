@@ -13,10 +13,15 @@
   environment: &consul_env
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
-    
+    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+
 - name: Create read policy
-  ansible.builtin.command: consul acl policy create -name read-policy -rules @/tmp/read-policy.hcl
+  ansible.builtin.command: >
+    consul acl policy create
+    -name read-policy
+    -rules @/tmp/read-policy.hcl
   when: "'read-policy' not in policy_list.stdout"
   run_once: true
   environment: *consul_env
@@ -29,11 +34,13 @@
   environment: *consul_env
 
 - name: Create read role
-  ansible.builtin.command: consul acl role create -name read-role -policy-name read-policy
+  ansible.builtin.command: >
+    consul acl role create
+    -name read-role
+    -policy-name read-policy
   when: "'read-role' not in role_list.stdout"
   run_once: true
   environment: *consul_env
-
 
 # ------------------------------------------------
 # APPLICATION TOKEN (NO DUPLICATES)
