@@ -6,55 +6,55 @@
     delay: 5
     timeout: 60
 
-# A. Check if the file already exists on the first node
+# Check bootstrap token
 - name: Check for existing bootstrap token file
   ansible.builtin.stat:
     path: "{{ consul_config_dir }}/bootstrap.token"
   register: token_file_on_disk
 
-# B. Load it if it's there
 - name: Load existing token from disk
   ansible.builtin.slurp:
     src: "{{ consul_config_dir }}/bootstrap.token"
   register: slurped_token
   become: true
-  when: token_file_on_disk.stat.exists and token_file_on_disk.stat.size > 0
+  when:
+    - token_file_on_disk.stat.exists
+    - token_file_on_disk.stat.size > 0
 
 - name: Set master token fact from file
   ansible.builtin.set_fact:
     consul_master_token: "{{ slurped_token.content | b64decode | trim }}"
-  when: 
-    - token_file_on_disk.stat.exists 
+  when:
+    - token_file_on_disk.stat.exists
     - slurped_token.content is defined
 
-# C. Bootstrap ONLY if we still don't have a token
+# Bootstrap ACL
 - name: Bootstrap ACL
   ansible.builtin.command: consul acl bootstrap -format=json
   register: consul_bootstrap
   run_once: true
-  when: consul_master_token is not defined or consul_master_token == ""
   failed_when: false
+  when: consul_master_token is not defined or consul_master_token == ""
   environment:
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_HTTP_SSL_VERIFY: "false"
 
 - name: Extract new token from bootstrap output
   ansible.builtin.set_fact:
     consul_master_token: "{{ (consul_bootstrap.stdout | from_json).SecretID }}"
-  when: 
+  run_once: true
+  when:
     - consul_bootstrap.changed
     - consul_bootstrap.stdout | length > 0
     - "'SecretID' in consul_bootstrap.stdout"
-  run_once: true
 
-# D. Share this token with all other hosts
-- name: Propagate token to all hosts in the play
+# Share token to all hosts
+- name: Propagate token to all hosts
   ansible.builtin.set_fact:
     consul_master_token: "{{ hostvars[ansible_play_hosts[0]]['consul_master_token'] }}"
-  # Only set it if the current host doesn't have it yet
   when: consul_master_token is not defined or consul_master_token == ""
 
-# E. Save it to the disk of ALL nodes
+# Save token
 - name: Save bootstrap token to file
   ansible.builtin.copy:
     content: "{{ consul_master_token }}"
@@ -63,9 +63,11 @@
     group: "{{ consul_group }}"
     mode: "0600"
   become: true
-  when: consul_master_token is defined and consul_master_token != ""
+  when:
+    - consul_master_token is defined
+    - consul_master_token != ""
 
-# F. Proceed to the next steps
+# Next tasks
 - name: Include ACL policies
   ansible.builtin.include_tasks: acl_policies.yml
 
