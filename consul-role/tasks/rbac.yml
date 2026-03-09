@@ -13,10 +13,8 @@
   environment: &consul_env
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
-    CONSUL_HTTP_SSL_VERIFY: "false"
-
+    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    
 - name: Create read policy
   ansible.builtin.command: consul acl policy create -name read-policy -rules @/tmp/read-policy.hcl
   when: "'read-policy' not in policy_list.stdout"
