@@ -39,7 +39,14 @@
     CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
     CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"  
     CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"    
-    CONSUL_HTTP_SSL_VERIFY: "false"
+    #CONSUL_HTTP_SSL_VERIFY: "false"
+    
+    # KEY FIX: This ensures TLS remains secure by verifying the 
+    # server's identity against the DNS name in the certificate.
+    CONSUL_TLS_SERVER_NAME: "opstree.dev"
+    
+    # We set this to true to enforce security now that we have the server name fix
+    CONSUL_HTTP_SSL_VERIFY: "true"
 
 - name: Create Consul policies
   ansible.builtin.command: >
