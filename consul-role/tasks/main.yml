@@ -5,8 +5,8 @@
 - name: Include directory tasks
   ansible.builtin.include_tasks: directories.yml
 
-# - name: Include configuration tasks
-#   ansible.builtin.include_tasks: config.yml
+- name: Include configuration tasks
+  ansible.builtin.include_tasks: config.yml
 
 - name: Include service tasks
   ansible.builtin.include_tasks: service.yml
