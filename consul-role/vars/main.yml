@@ -1,8 +1,22 @@
 ---
 # vars file for consul
+
+
+# DNS Mapping for TLS Compliance
+consul_dns_mapping:
+  "192.168.8.138": "consul-leader.opstree.dev"
+  "192.168.8.220": "consul-quorum-1.opstree.dev"
+  "192.168.8.35":  "consul-quorum-2.opstree.dev"
+
+# Helper to resolve the FQDN based on the IP being used for the task
+current_node_fqdn: "{{ consul_dns_mapping[ansible_host] | default(inventory_hostname) }}"
+
+# Installation variables
 consul_binary_url: "https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_linux_amd64.zip"
 consul_zip_path: "/tmp/consul_{{ consul_version }}.zip"
 
+
+# Sensitive Keys
 consul_master_token: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           64363638396462636134353637383865643931373664373034623536366134623235306438356164
