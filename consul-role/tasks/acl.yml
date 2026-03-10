@@ -1,8 +1,8 @@
 ---
-- name: Wait for Consul HTTP API
+- name: Wait for Consul HTTPs API
   ansible.builtin.wait_for:
     host: "{{ consul_bind_addr }}"
-    port: 8500
+    port: 8501
     delay: 5
     timeout: 60
 
@@ -36,9 +36,9 @@
   failed_when: false
   when: consul_master_token is not defined or consul_master_token == ""
   environment:
-    CONSUL_HTTP_ADDR: "http://{{ consul_bind_addr }}:8500"
-    #CONSUL_HTTP_SSL_VERIFY: "true"
-    #CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_SSL_VERIFY: "true"
+    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
 
 - name: Extract new token from bootstrap output
   ansible.builtin.set_fact:
