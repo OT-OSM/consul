@@ -41,8 +41,8 @@ tls {
     cert_file = "{{ consul_config_dir }}/certs/tls.crt"
     key_file  = "{{ consul_config_dir }}/certs/tls.key"
 
-    verify_incoming = true
-    verify_outgoing = true
+    verify_incoming = false
+    verify_outgoing = false
   }
 
   https {
