@@ -40,17 +40,9 @@ tls {
     ca_file   = "{{ consul_config_dir }}/certs/tls.crt"
     cert_file = "{{ consul_config_dir }}/certs/tls.crt"
     key_file  = "{{ consul_config_dir }}/certs/tls.key"
-    
-    # This allows the browser to reach the "Login" page
     verify_incoming = false
-
-    # This keeps the backend server-to-server traffic secure
-    verify_incoming_rpc = true
-
-    
     verify_outgoing = false
 
-    #verify_server_hostname = true
 
     
   }
