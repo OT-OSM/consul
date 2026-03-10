@@ -1,4 +1,21 @@
 ---
+
+- name: Ensure certificate directory is accessible
+  ansible.builtin.file:
+    path: "{{ consul_config_dir }}/certs"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Fix certificate file permissions
+  ansible.builtin.file:
+    path: "{{ consul_config_dir }}/certs/{{ item.file }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { file: "tls.crt", mode: "0644" }
+    - { file: "tls.key", mode: "0640" }
+  become: true
+  
 - name: Copy policy files
   ansible.builtin.template:
     src: "policies/{{ item }}.hcl.j2"
@@ -8,6 +25,7 @@
     - agent-policy
     - service-policy
     - readonly-policy
+
 
 - name: List existing policies
   ansible.builtin.command: consul acl policy list
