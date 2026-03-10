@@ -38,7 +38,7 @@
   environment:
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_SSL_VERIFY: "false"
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    #CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
 
 - name: Extract new token from bootstrap output
   ansible.builtin.set_fact:
