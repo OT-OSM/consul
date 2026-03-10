@@ -37,7 +37,7 @@ ports {
 
 tls {
   defaults {
-    ca_file   = "{{ consul_config_dir }}/certs/tls.crt"
+    #ca_file   = "{{ consul_config_dir }}/certs/tls.crt"
     cert_file = "{{ consul_config_dir }}/certs/tls.crt"
     key_file  = "{{ consul_config_dir }}/certs/tls.key"
     verify_incoming = false
