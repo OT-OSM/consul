@@ -43,6 +43,12 @@ tls {
     verify_incoming = true
     verify_outgoing = true
 
+    https {
+    # Setting this to false allows your browser to connect 
+    # without you needing to install a client cert in the browser,
+    # but the connection itself remains encrypted.
+    verify_incoming = false
+
 
     
   }
