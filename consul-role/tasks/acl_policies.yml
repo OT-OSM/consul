@@ -13,6 +13,7 @@
   ansible.builtin.command: consul acl policy list
   register: existing_policies
   run_once: true
+  become: true
   changed_when: false
   environment: &consul_env
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
