@@ -12,10 +12,11 @@ ui_config {
   enabled = {{ consul_enable_ui | lower }}
 }
 
+# Use the new DNS names for joining the cluster
 retry_join = [
-{% for host in play_hosts %}
-  "{{ hostvars[host]['ansible_host'] | default(host) }}"{% if not loop.last %},{% endif %}
-{% endfor %}
+  "consul-leader.opstree.dev",
+  "consul-quorum-1.opstree.dev",
+  "consul-quorum-2.opstree.dev"
 ]
 
 acl {
@@ -42,5 +43,8 @@ tls {
     key_file  = "{{ consul_config_dir }}/certs/tls.key"
     verify_incoming = true
     verify_outgoing = true
+
+    # This ensures that servers verify each other using the DNS names in the certs
+    verify_server_hostname = true
   }
 }
