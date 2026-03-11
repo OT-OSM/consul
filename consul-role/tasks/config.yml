@@ -1,3 +1,4 @@
+---
 - name: Create TLS cert directory
   ansible.builtin.file:
     path: "{{ consul_config_dir }}/certs"
@@ -6,23 +7,29 @@
     group: "{{ consul_group }}"
     mode: "0750"
 
-- name: Copy TLS certificate
+- name: Copy CA certificate
   ansible.builtin.copy:
-    src: tls.crt
-    dest: "{{ consul_config_dir }}/certs/tls.crt"
+    src: consul-agent-ca.pem
+    dest: "{{ consul_config_dir }}/certs/consul-agent-ca.pem"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
     mode: "0644"
-  notify: Restart Consul
 
-- name: Copy TLS private key
+- name: Copy Server certificate
   ansible.builtin.copy:
-    src: tls.key
-    dest: "{{ consul_config_dir }}/certs/tls.key"
+    src: dc1-server-consul-0.pem
+    dest: "{{ consul_config_dir }}/certs/dc1-server-consul-0.pem"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0644"
+
+- name: Copy Server key
+  ansible.builtin.copy:
+    src: dc1-server-consul-0-key.pem
+    dest: "{{ consul_config_dir }}/certs/dc1-server-consul-0-key.pem"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
     mode: "0600"
-  notify: Restart Consul
 
 - name: Deploy Consul server configuration
   ansible.builtin.template:
