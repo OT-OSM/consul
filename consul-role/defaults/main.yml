@@ -19,7 +19,7 @@ consul_enable_ui: true
 # ACL
 consul_acl_enabled: true
 consul_acl_default_policy: "deny"
-consul_acl_token_persistence: true
+consul_acl_token_persistence: false
 consul_agent_token: ""
 
 consul_client_addr: "0.0.0.0"
