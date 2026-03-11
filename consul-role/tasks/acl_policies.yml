@@ -12,9 +12,8 @@
     path: "{{ consul_config_dir }}/certs/{{ item.file }}"
     mode: "{{ item.mode }}"
   loop:
-    - { file: "consul-agent-ca.pem", mode: "0644" }
-    - { file: "dc1-server-consul-0.pem", mode: "0644" }
-    - { file: "dc1-server-consul-0-key.pem", mode: "0600" }
+    - { file: "tls.crt", mode: "0644" }
+    - { file: "tls.key", mode: "0640" }
   become: true
   
 - name: Copy policy files
@@ -37,9 +36,8 @@
   environment: &consul_env
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    # This must point to the CA file, not the server cert
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/consul-agent-ca.pem"  
-    CONSUL_HTTP_SSL_VERIFY: "true"
+    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"  
+    CONSUL_HTTP_SSL_VERIFY: "false"
 
 - name: Create Consul policies
   ansible.builtin.command: >
