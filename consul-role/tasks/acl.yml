@@ -38,7 +38,8 @@
   environment:
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_SSL_VERIFY: "true"
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    # This must point to the CA file, not the server cert
+    CONSUL_CACERT: "{{ consul_config_dir }}/certs/consul-agent-ca.pem"
 
 - name: Extract new token from bootstrap output
   ansible.builtin.set_fact:
