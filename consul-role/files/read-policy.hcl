@@ -4,5 +4,5 @@ node_prefix "" {
 }
 
 service_prefix "" {
-  policy = "read"
+  policy = "write"
 }
