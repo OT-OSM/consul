@@ -26,3 +26,7 @@ consul_client_addr: "0.0.0.0"
 
 # Gossip Encryption
 consul_gossip_key: ""
+
+# Monitoring
+consul_telemetry_enabled: true
+consul_prometheus_retention: "60s"
