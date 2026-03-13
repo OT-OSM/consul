@@ -3,13 +3,6 @@
     "name": "{{ poc_service_name }}",
     "address": "{{ poc_service_ip }}",
     "port": {{ poc_service_port }},
-    "token": "{{ actual_service_token }}",
-    "check": {
-      "id": "keycloak-check",
-      "name": "Keycloak Port Listen Check",
-      "tcp": "{{ poc_service_ip }}:{{ poc_service_port }}",
-      "interval": "10s",
-      "timeout": "2s"
-    }
+    "token": "{{ actual_service_token }}"
   }
 }
