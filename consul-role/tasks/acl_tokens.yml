@@ -99,14 +99,16 @@
   run_once: true
   environment: *consul_env
 
-- name: Save Prometheus token
+- name: Save Prometheus token to all nodes
   ansible.builtin.copy:
-    content: "{{ prom_token_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
+    # Use hostvars to get the token from the first host where it was generated
+    content: "{{ hostvars[ansible_play_hosts[0]]['prom_token_output']['stdout'] | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
     dest: "{{ consul_config_dir }}/prometheus.token"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
     mode: "0600"
-  when: prom_token_output.changed
+  become: true
+  # Remove run_once so it saves to all 3 nodes
 
 - name: Set Prometheus token fact for use in templates
   ansible.builtin.set_fact:
