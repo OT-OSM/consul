@@ -49,6 +49,7 @@
     - agent-policy
     - service-policy
     - readonly-policy
+    - monitoring-policy
   when: item not in existing_policies.stdout
   run_once: true
   environment: *consul_env
