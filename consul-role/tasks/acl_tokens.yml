@@ -78,40 +78,52 @@
     - "'SecretID' in service_token_output.stdout"
   run_once: true
 
- ####################################
-# Monitoring
+####################################
+# Monitoring Token Logic
 #################################### 
 
-- name: Check if monitoring token exists on disk
+- name: Check if monitoring token exists on disk (Node 1)
   ansible.builtin.stat:
     path: "{{ consul_config_dir }}/prometheus.token"
-  register: prom_token_stat
+  register: prom_token_stat_node1
+  run_once: true
+  delegate_to: "{{ ansible_play_hosts[0] }}"
 
-- name: Create Prometheus monitoring token
+- name: Create Prometheus monitoring token if missing
   ansible.builtin.command: >
     consul acl token create
     -description "Prometheus Metrics Token"
     -policy-name monitoring-policy
   register: prom_token_output
   when: 
-    - not prom_token_stat.stat.exists
+    - not prom_token_stat_node1.stat.exists
     - "'Prometheus Metrics Token' not in existing_tokens.stdout"
   run_once: true
   environment: *consul_env
 
-- name: Save Prometheus token to all nodes
+- name: Slurp existing token if it was already on disk
+  ansible.builtin.slurp:
+    src: "{{ consul_config_dir }}/prometheus.token"
+  register: slurped_prom_token
+  when: prom_token_stat_node1.stat.exists
+  run_once: true
+  delegate_to: "{{ ansible_play_hosts[0] }}"
+
+- name: Set Prometheus token fact
+  ansible.builtin.set_fact:
+    consul_prometheus_token: >-
+      {{ 
+        (prom_token_output.stdout | regex_search('SecretID:\s+([a-fA-F0-9-]+)', '\1') | first) 
+        if (prom_token_output.changed) 
+        else (slurped_prom_token.content | b64decode | trim) 
+      }}
+  run_once: true
+
+- name: Ensure Prometheus token is on all nodes
   ansible.builtin.copy:
-    # Use hostvars to get the token from the first host where it was generated
-    content: "{{ hostvars[ansible_play_hosts[0]]['prom_token_output']['stdout'] | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
+    content: "{{ hostvars[ansible_play_hosts[0]]['consul_prometheus_token'] }}"
     dest: "{{ consul_config_dir }}/prometheus.token"
     owner: "{{ consul_user }}"
     group: "{{ consul_group }}"
     mode: "0600"
   become: true
-  # Remove run_once so it saves to all 3 nodes
-
-- name: Set Prometheus token fact for use in templates
-  ansible.builtin.set_fact:
-    consul_prometheus_token: "{{ prom_token_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
-  when: prom_token_output.changed
-  run_once: true
