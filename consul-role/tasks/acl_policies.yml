@@ -25,6 +25,7 @@
     - agent-policy
     - service-policy
     - readonly-policy
+    - monitoring-policy
 
 
 - name: List existing policies
