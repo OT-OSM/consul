@@ -32,3 +32,13 @@
     group: "{{ consul_group }}"
     mode: "0640"
   notify: Restart Consul
+
+
+- name: Register Keycloak POC Service
+  ansible.builtin.template:
+    src: keycloak-service.json.j2
+    dest: "{{ consul_config_dir }}/keycloak.json"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0640"
+  notify: Restart Consul
