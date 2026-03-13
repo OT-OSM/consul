@@ -18,6 +18,11 @@ retry_join = [
 {% endfor %}
 ]
 
+telemetry {
+  prometheus_retention_time = "{{ consul_prometheus_retention }}"
+  disable_hostname = true
+}
+
 acl {
   enabled = {{ consul_acl_enabled | lower }}
   default_policy = "{{ consul_acl_default_policy }}"
