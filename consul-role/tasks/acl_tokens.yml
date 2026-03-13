@@ -43,7 +43,6 @@
     - not agent_token_stat.stat.exists
     - agent_token_output.stdout is defined
     - "'SecretID' in agent_token_output.stdout"
-  run_once: true
 
 ####################################
 # Service Token
