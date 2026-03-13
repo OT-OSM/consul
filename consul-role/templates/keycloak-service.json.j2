@@ -3,6 +3,7 @@
     "name": "{{ poc_service_name }}",
     "address": "{{ poc_service_ip }}",
     "port": {{ poc_service_port }},
+    "token": "{{ lookup('file', '/etc/consul.d/service.token') }}",
     "check": {
       "id": "keycloak-check",
       "name": "Keycloak Port Listen Check",
