@@ -107,4 +107,3 @@
     group: "{{ consul_group }}"
     mode: "0600"
   when: prom_token_output.changed
-  run_once: true
