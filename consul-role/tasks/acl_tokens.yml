@@ -78,3 +78,34 @@
     - service_token_output.stdout is defined
     - "'SecretID' in service_token_output.stdout"
   run_once: true
+
+ ####################################
+# Monitoring
+#################################### 
+
+- name: Check if monitoring token exists on disk
+  ansible.builtin.stat:
+    path: "{{ consul_config_dir }}/prometheus.token"
+  register: prom_token_stat
+
+- name: Create Prometheus monitoring token
+  ansible.builtin.command: >
+    consul acl token create
+    -description "Prometheus Metrics Token"
+    -policy-name monitoring-policy
+  register: prom_token_output
+  when: 
+    - not prom_token_stat.stat.exists
+    - "'Prometheus Metrics Token' not in existing_tokens.stdout"
+  run_once: true
+  environment: *consul_env
+
+- name: Save Prometheus token
+  ansible.builtin.copy:
+    content: "{{ prom_token_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
+    dest: "{{ consul_config_dir }}/prometheus.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  when: prom_token_output.changed
+  run_once: true
