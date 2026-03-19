@@ -34,19 +34,19 @@
   notify: Restart Consul
 
 
-- name: Read service token from server
-  ansible.builtin.slurp:
-    src: "{{ consul_config_dir }}/service.token"
-  register: remote_service_token
+# - name: Read service token from server
+#   ansible.builtin.slurp:
+#     src: "{{ consul_config_dir }}/service.token"
+#   register: remote_service_token
 
-- name: Register Keycloak POC Service
-  ansible.builtin.template:
-    src: keycloak-service.json.j2
-    dest: "{{ consul_config_dir }}/keycloak.json"
-    owner: "{{ consul_user }}"
-    group: "{{ consul_group }}"
-    mode: "0640"
-  vars:
-    # This decodes the base64 token from the remote server
-    actual_service_token: "{{ remote_service_token['content'] | b64decode | trim }}"
-  notify: Restart Consul
+# - name: Register Keycloak POC Service
+#   ansible.builtin.template:
+#     src: keycloak-service.json.j2
+#     dest: "{{ consul_config_dir }}/keycloak.json"
+#     owner: "{{ consul_user }}"
+#     group: "{{ consul_group }}"
+#     mode: "0640"
+#   vars:
+#     # This decodes the base64 token from the remote server
+#     actual_service_token: "{{ remote_service_token['content'] | b64decode | trim }}"
+#   notify: Restart Consul
