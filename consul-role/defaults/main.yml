@@ -16,6 +16,15 @@ consul_bootstrap_expect: "{{ play_hosts | length }}"
 
 consul_enable_ui: true
 
+# Ports
+consul_http_port: 8500
+consul_https_port: 8501
+consul_use_tls: true
+
+# TLS
+consul_tls_server_name: "opstree.dev"
+consul_tls_verify: false
+
 # ACL
 consul_acl_enabled: true
 consul_acl_default_policy: "deny"
