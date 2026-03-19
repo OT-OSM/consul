@@ -13,7 +13,7 @@
   environment: &consul_env
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    #CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
     CONSUL_HTTP_SSL_VERIFY: "false"
 
 - name: Create read policy
