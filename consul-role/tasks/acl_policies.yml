@@ -59,14 +59,15 @@
   ansible.builtin.command: consul acl policy list
   register: existing_policies
   run_once: true
-  become: true  # <--- VERY IMPORTANT
-  changed_when: false
+  become: true 
   environment:
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    # Using the Envoy-managed identity
-    CONSUL_CACERT: "/etc/envoy/tls/dev.crt"
-    CONSUL_CLIENT_CERT: "/etc/envoy/tls/dev.crt"
-    CONSUL_CLIENT_KEY: "/etc/envoy/tls/dev.key"
+    
+    # Switch these to the actual paths where the files exist
+    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
+    
     CONSUL_TLS_SERVER_NAME: "opstree.dev"
     CONSUL_HTTP_SSL_VERIFY: "false"
