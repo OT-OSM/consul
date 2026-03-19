@@ -1,8 +1,8 @@
 ---
-- name: Wait for Consul HTTPs API
+- name: Wait for Consul HTTP API
   ansible.builtin.wait_for:
     host: "{{ consul_bind_addr }}"
-    port: 8501
+    port: 8500
     delay: 5
     timeout: 60
 
