@@ -3,8 +3,8 @@
   ansible.builtin.wait_for:
     host: "{{ consul_bind_addr }}"
     port: 8500
-    delay: 5
-    timeout: 60
+    delay: 15
+    timeout: 120
 
 # Check bootstrap token
 - name: Check for existing bootstrap token file
