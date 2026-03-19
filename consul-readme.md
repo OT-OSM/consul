@@ -1,3 +1,9 @@
+
+# Consul Ansible Role
+
+<img width="413" height="122" alt="image" src="https://github.com/user-attachments/assets/c650148d-68c8-46cf-899c-f5966bafdfa3" />
+
+
 ## Table of Contents
 
 1. [Overview](#1-overview)  
