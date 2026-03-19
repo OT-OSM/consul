@@ -61,7 +61,7 @@
   run_once: true
   become: true 
   environment:
-    CONSUL_HTTP_ADDR: "http://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     
     # Switch these to the actual paths where the files exist
