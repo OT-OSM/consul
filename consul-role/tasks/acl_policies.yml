@@ -67,12 +67,11 @@
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     
-    # CHANGE 2: Uncomment and provide the cert files for the handshake
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
+    # CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    # CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
+    # CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
     
-    # CHANGE 3: Add the Server Name to match your cert (opstree.dev)
+    # # CHANGE 3: Add the Server Name to match your cert (opstree.dev)
     CONSUL_TLS_SERVER_NAME: "opstree.dev"
     CONSUL_HTTP_SSL_VERIFY: "false"
 
