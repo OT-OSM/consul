@@ -6,9 +6,9 @@
   changed_when: false
   run_once: true
   environment: &consul_env
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_ADDR: "{{ consul_scheme }}://{{ consul_bind_addr }}:{{ consul_api_port }}"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_HTTP_SSL_VERIFY: "false"
+    CONSUL_HTTP_SSL_VERIFY: "{{ consul_tls_verify | ternary('true','false') }}"
     CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
 
 ####################################
@@ -31,6 +31,7 @@
     - "'Agent Token' not in existing_tokens.stdout"
   run_once: true
   environment: *consul_env
+  no_log: true
 
 - name: Save agent token
   ansible.builtin.copy:
@@ -43,6 +44,7 @@
     - not agent_token_stat.stat.exists
     - agent_token_output.stdout is defined
     - "'SecretID' in agent_token_output.stdout"
+  no_log: true
 
 ####################################
 # Service Token
@@ -64,6 +66,7 @@
     - "'Service Token' not in existing_tokens.stdout"
   run_once: true
   environment: *consul_env
+  no_log: true
 
 - name: Save service token
   ansible.builtin.copy:
@@ -74,9 +77,10 @@
     mode: "0600"
   when:
     - not service_token_stat.stat.exists
-    - service_token_output.stdout is defined
+    - agent_token_output.stdout is defined
     - "'SecretID' in service_token_output.stdout"
   run_once: true
+  no_log: true
 
 ####################################
 # Monitoring Token Logic
