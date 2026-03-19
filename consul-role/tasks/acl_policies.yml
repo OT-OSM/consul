@@ -1,31 +1,31 @@
 ---
 
-- name: Ensure certificate directory is accessible
-  ansible.builtin.file:
-    path: "{{ consul_config_dir }}/certs"
-    state: directory
-    mode: "0755"
-  become: true
+# - name: Ensure certificate directory is accessible
+#   ansible.builtin.file:
+#     path: "{{ consul_config_dir }}/certs"
+#     state: directory
+#     mode: "0755"
+#   become: true
 
-- name: Fix certificate file permissions
-  ansible.builtin.file:
-    path: "{{ consul_config_dir }}/certs/{{ item.file }}"
-    mode: "{{ item.mode }}"
-  loop:
-    - { file: "tls.crt", mode: "0644" }
-    - { file: "tls.key", mode: "0640" }
-  become: true
+# - name: Fix certificate file permissions
+#   ansible.builtin.file:
+#     path: "{{ consul_config_dir }}/certs/{{ item.file }}"
+#     mode: "{{ item.mode }}"
+#   loop:
+#     - { file: "tls.crt", mode: "0644" }
+#     - { file: "tls.key", mode: "0640" }
+#   become: true
   
-- name: Copy policy files
-  ansible.builtin.template:
-    src: "policies/{{ item }}.hcl.j2"
-    dest: "/tmp/{{ item }}.hcl"
-    mode: "0644"
-  loop:
-    - agent-policy
-    - service-policy
-    - readonly-policy
-    - monitoring-policy
+# - name: Copy policy files
+#   ansible.builtin.template:
+#     src: "policies/{{ item }}.hcl.j2"
+#     dest: "/tmp/{{ item }}.hcl"
+#     mode: "0644"
+#   loop:
+#     - agent-policy
+#     - service-policy
+#     - readonly-policy
+#     - monitoring-policy
 
 
 - name: List existing policies
@@ -37,8 +37,8 @@
   environment: &consul_env
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"  
-    CONSUL_HTTP_SSL_VERIFY: "false"
+    #CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"  
+    #CONSUL_HTTP_SSL_VERIFY: "false"
 
 - name: Create Consul policies
   ansible.builtin.command: >
