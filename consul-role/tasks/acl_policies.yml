@@ -55,26 +55,18 @@
 #   environment: *consul_env
 
 
-
-- name: List existing policies
+- name: List existing policies via Envoy TLS
   ansible.builtin.command: consul acl policy list
   register: existing_policies
   run_once: true
-  become: true
+  become: true  # <--- VERY IMPORTANT
   changed_when: false
-  environment: &consul_env
-    # CHANGE 1: Use https instead of http
+  environment:
     CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
-    
-    # # CHANGE 3: Add the Server Name to match your cert (opstree.dev)
+    # Using the Envoy-managed identity
+    CONSUL_CACERT: "/etc/envoy/tls/dev.crt"
+    CONSUL_CLIENT_CERT: "/etc/envoy/tls/dev.crt"
+    CONSUL_CLIENT_KEY: "/etc/envoy/tls/dev.key"
     CONSUL_TLS_SERVER_NAME: "opstree.dev"
     CONSUL_HTTP_SSL_VERIFY: "false"
-
-
-
-
