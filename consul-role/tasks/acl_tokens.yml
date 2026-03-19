@@ -6,7 +6,7 @@
   changed_when: false
   run_once: true
   environment: &consul_env
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8500"
+    CONSUL_HTTP_ADDR: "http://{{ consul_bind_addr }}:8500"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     #CONSUL_HTTP_SSL_VERIFY: "false"
     #CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
