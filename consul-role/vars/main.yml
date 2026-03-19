@@ -29,6 +29,6 @@ consul_gossip_key: !vault |
 
 
 
-# Divya's Keycloak Details for POC
-poc_service_name: "keycloak"
-poc_service_port: 8080
+# # Divya's Keycloak Details for POC
+# poc_service_name: "keycloak"
+# poc_service_port: 8080
