@@ -224,12 +224,12 @@ sudo mv consul /usr/local/bin/
 consul --version
 ```
 
-# 7. Running the Playbook
+## 7. Running the Playbook
 ```
 ansible-playbook -i inventory.ini site.yml
 ```
 
-# 8. Validation & Testing
+## 8. Validation & Testing
 ## Check Cluster Members
 ```
 consul members
@@ -250,7 +250,7 @@ Default UI URL:
 http://<server-ip>:8500
 ```
 
-# 9. Best Practices Followed
+## 9. Best Practices Followed
 
 - Always use minimum 3 server nodes
 
