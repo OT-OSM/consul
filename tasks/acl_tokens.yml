@@ -1,0 +1,133 @@
+---
+# Check existing tokens
+- name: Check existing tokens in consul
+  ansible.builtin.command: consul acl token list
+  register: existing_tokens
+  changed_when: false
+  run_once: true
+  environment: &consul_env
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "{{ consul_tls_verify | ternary('true','false') }}"
+    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+
+####################################
+# Agent Token
+####################################
+
+- name: Check if agent token exists on disk
+  ansible.builtin.stat:
+    path: "{{ consul_config_dir }}/agent.token"
+  register: agent_token_stat
+
+- name: Create agent token
+  ansible.builtin.command: >
+    consul acl token create
+    -description "Agent Token"
+    -policy-name agent-policy
+  register: agent_token_output
+  when:
+    - not agent_token_stat.stat.exists
+    - "'Agent Token' not in existing_tokens.stdout"
+  run_once: true
+  environment: *consul_env
+  no_log: true
+
+- name: Save agent token
+  ansible.builtin.copy:
+    content: "{{ agent_token_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
+    dest: "{{ consul_config_dir }}/agent.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  when:
+    - not agent_token_stat.stat.exists
+    - agent_token_output.stdout is defined
+    - "'SecretID' in agent_token_output.stdout"
+  no_log: true
+
+####################################
+# Service Token
+####################################
+
+- name: Check if service token exists on disk
+  ansible.builtin.stat:
+    path: "{{ consul_config_dir }}/service.token"
+  register: service_token_stat
+
+- name: Create service token
+  ansible.builtin.command: >
+    consul acl token create
+    -description "Service Token"
+    -policy-name service-policy
+  register: service_token_output
+  when:
+    - not service_token_stat.stat.exists
+    - "'Service Token' not in existing_tokens.stdout"
+  run_once: true
+  environment: *consul_env
+  no_log: true
+
+- name: Save service token
+  ansible.builtin.copy:
+    content: "{{ service_token_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
+    dest: "{{ consul_config_dir }}/service.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  when:
+    - not service_token_stat.stat.exists
+    - agent_token_output.stdout is defined
+    - "'SecretID' in service_token_output.stdout"
+  run_once: true
+  no_log: true
+
+####################################
+# Monitoring Token Logic
+#################################### 
+
+- name: Check if monitoring token exists on disk (Node 1)
+  ansible.builtin.stat:
+    path: "{{ consul_config_dir }}/prometheus.token"
+  register: prom_token_stat_node1
+  run_once: true
+  delegate_to: "{{ ansible_play_hosts[0] }}"
+
+- name: Create Prometheus monitoring token if missing
+  ansible.builtin.command: >
+    consul acl token create
+    -description "Prometheus Metrics Token"
+    -policy-name monitoring-policy
+  register: prom_token_output
+  when: 
+    - not prom_token_stat_node1.stat.exists
+    - "'Prometheus Metrics Token' not in existing_tokens.stdout"
+  run_once: true
+  environment: *consul_env
+
+- name: Slurp existing token if it was already on disk
+  ansible.builtin.slurp:
+    src: "{{ consul_config_dir }}/prometheus.token"
+  register: slurped_prom_token
+  when: prom_token_stat_node1.stat.exists
+  run_once: true
+  delegate_to: "{{ ansible_play_hosts[0] }}"
+
+- name: Set Prometheus token fact
+  ansible.builtin.set_fact:
+    consul_prometheus_token: >-
+      {{ 
+        (prom_token_output.stdout | regex_search('SecretID:\s+([a-fA-F0-9-]+)', '\1') | first) 
+        if (prom_token_output.changed) 
+        else (slurped_prom_token.content | b64decode | trim) 
+      }}
+  run_once: true
+
+- name: Ensure Prometheus token is on all nodes
+  ansible.builtin.copy:
+    content: "{{ hostvars[ansible_play_hosts[0]]['consul_prometheus_token'] }}"
+    dest: "{{ consul_config_dir }}/prometheus.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  become: true

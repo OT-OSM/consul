@@ -1,0 +1,75 @@
+---
+- name: Wait for Consul HTTPs API
+  ansible.builtin.wait_for:
+    host: "{{ consul_bind_addr }}"
+    port: "{{ consul_https_port }}"
+    delay: 15
+    timeout: 120
+
+# Check bootstrap token
+- name: Check for existing bootstrap token file
+  ansible.builtin.stat:
+    path: "{{ consul_config_dir }}/bootstrap.token"
+  register: token_file_on_disk
+
+- name: Load existing token from disk
+  ansible.builtin.slurp:
+    src: "{{ consul_config_dir }}/bootstrap.token"
+  register: slurped_token
+  become: true
+  when:
+    - token_file_on_disk.stat.exists
+    - token_file_on_disk.stat.size > 0
+
+- name: Set master token fact from file
+  ansible.builtin.set_fact:
+    consul_master_token: "{{ slurped_token.content | b64decode | trim }}"
+  when:
+    - token_file_on_disk.stat.exists
+    - slurped_token.content is defined
+
+# Bootstrap ACL
+- name: Bootstrap ACL
+  ansible.builtin.command: consul acl bootstrap -format=json
+  register: consul_bootstrap
+  run_once: true
+  failed_when: false
+  when: consul_master_token is not defined or consul_master_token == ""
+  environment:
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:{{ consul_https_port }}"
+    
+
+- name: Extract new token from bootstrap output
+  ansible.builtin.set_fact:
+    consul_master_token: "{{ (consul_bootstrap.stdout | from_json).SecretID }}"
+  run_once: true
+  when:
+    - consul_bootstrap.changed
+    - consul_bootstrap.stdout | length > 0
+    - "'SecretID' in consul_bootstrap.stdout"
+
+# Share token to all hosts
+- name: Propagate token to all hosts
+  ansible.builtin.set_fact:
+    consul_master_token: "{{ hostvars[ansible_play_hosts[0]]['consul_master_token'] }}"
+  when: consul_master_token is not defined or consul_master_token == ""
+
+# Save token
+- name: Save bootstrap token to file
+  ansible.builtin.copy:
+    content: "{{ consul_master_token }}"
+    dest: "{{ consul_config_dir }}/bootstrap.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  become: true
+  when:
+    - consul_master_token is defined
+    - consul_master_token != ""
+
+# Next tasks
+- name: Include ACL policies
+  ansible.builtin.include_tasks: acl_policies.yml
+
+- name: Include ACL tokens
+  ansible.builtin.include_tasks: acl_tokens.yml

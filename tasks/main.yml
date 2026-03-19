@@ -1,0 +1,20 @@
+---
+- name: Include installation tasks
+  ansible.builtin.include_tasks: install.yml
+
+- name: Include directory tasks
+  ansible.builtin.include_tasks: directories.yml
+
+- name: Include configuration tasks
+  ansible.builtin.include_tasks: config.yml
+
+- name: Include service tasks
+  ansible.builtin.include_tasks: service.yml
+
+- name: Include ACL tasks
+  ansible.builtin.include_tasks: acl.yml
+  when: consul_acl_enabled
+
+- name: Include RBAC tasks
+  ansible.builtin.include_tasks: rbac.yml
+  when: consul_acl_enabled

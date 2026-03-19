@@ -1,0 +1,77 @@
+---
+- name: Copy read policy file
+  ansible.builtin.copy:
+    src: read-policy.hcl
+    dest: /tmp/read-policy.hcl
+    mode: "0644"
+
+- name: Check existing policies
+  ansible.builtin.command: consul acl policy list
+  register: policy_list
+  changed_when: false
+  run_once: true
+  environment: &consul_env
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+
+- name: Create read policy
+  ansible.builtin.command: >
+    consul acl policy create
+    -name read-policy
+    -rules @/tmp/read-policy.hcl
+  when: "'read-policy' not in policy_list.stdout"
+  run_once: true
+  environment: *consul_env
+
+- name: Check existing roles
+  ansible.builtin.command: consul acl role list
+  register: role_list
+  changed_when: false
+  run_once: true
+  environment: *consul_env
+
+- name: Create read role
+  ansible.builtin.command: >
+    consul acl role create
+    -name read-role
+    -policy-name read-policy
+  when: "'read-role' not in role_list.stdout"
+  run_once: true
+  environment: *consul_env
+
+# ------------------------------------------------
+# APPLICATION TOKEN (NO DUPLICATES)
+# ------------------------------------------------
+
+- name: Check if application token exists on disk
+  ansible.builtin.stat:
+    path: "{{ consul_config_dir }}/app.token"
+  register: app_token_stat
+  run_once: true
+
+- name: Create application token
+  ansible.builtin.command: >
+    consul acl token create
+    -description "App Read Token"
+    -role-name read-role
+  register: app_token_output
+  when: not app_token_stat.stat.exists
+  run_once: true
+  environment: *consul_env
+  no_log: true
+
+- name: Save application token
+  ansible.builtin.copy:
+    content: "{{ app_token_output.stdout | regex_search('SecretID:\\s+([a-fA-F0-9-]+)', '\\1') | first }}"
+    dest: "{{ consul_config_dir }}/app.token"
+    owner: "{{ consul_user }}"
+    group: "{{ consul_group }}"
+    mode: "0600"
+  when:
+    - not app_token_stat.stat.exists
+    - app_token_output.stdout is defined
+    - "'SecretID' in app_token_output.stdout"
+  run_once: true
+  no_log: true

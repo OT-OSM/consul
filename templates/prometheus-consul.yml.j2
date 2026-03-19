@@ -1,0 +1,27 @@
+# Prometheus scrape configuration for Consul Cluster
+scrape_configs:
+  - job_name: 'consul-cluster'
+    scheme: https
+    metrics_path: '/v1/agent/metrics'
+    params:
+      format: ['prometheus']
+    tls_config:
+      insecure_skip_verify: true
+      # This matches your Envoy DNS name
+      server_name: "consul.opstree.dev"
+    
+    # This pulls the token that was generated in your acl_tokens.yml task
+    bearer_token: "{{ consul_prometheus_token }}"
+
+    static_configs:
+      - targets:
+{% for host in play_hosts %}
+          - "{{ hostvars[host]['ansible_host'] }}:8501"
+{% endfor %}
+    
+    # This cleans up the labels in Prometheus so you see the IP instead of IP:8501
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: '([^:]+)(?::\d+)?'
+        replacement: '${1}'
