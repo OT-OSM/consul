@@ -24,6 +24,7 @@ consul_use_tls: true
 # TLS
 consul_tls_server_name: "opstree.dev"
 consul_tls_verify: false
+consul_tls_enabled: false
 
 # ACL
 consul_acl_enabled: true
