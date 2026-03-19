@@ -11,7 +11,7 @@
   changed_when: false
   run_once: true
   environment: &consul_env
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:8501"
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:{{ consul_https_port }}"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
     CONSUL_HTTP_SSL_VERIFY: "false"
@@ -60,6 +60,7 @@
   when: not app_token_stat.stat.exists
   run_once: true
   environment: *consul_env
+  no_log: true
 
 - name: Save application token
   ansible.builtin.copy:
@@ -73,3 +74,4 @@
     - app_token_output.stdout is defined
     - "'SecretID' in app_token_output.stdout"
   run_once: true
+  no_log: true
