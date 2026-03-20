@@ -22,14 +22,20 @@
     -rules @/tmp/read-policy.hcl
   when: "'read-policy' not in policy_list.stdout"
   run_once: true
-  environment: *consul_env
+  environment:
+    CONSUL_HTTP_ADDR: "{{ 'https' if consul_tls_enabled else 'http' }}://{{ consul_bind_addr }}:{{ consul_https_port if consul_tls_enabled else consul_http_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "{{ consul_tls_verify | ternary('true','false') }}"
 
 - name: Check existing roles
   ansible.builtin.command: consul acl role list
   register: role_list
   changed_when: false
   run_once: true
-  environment: *consul_env
+  environment:
+    CONSUL_HTTP_ADDR: "{{ 'https' if consul_tls_enabled else 'http' }}://{{ consul_bind_addr }}:{{ consul_https_port if consul_tls_enabled else consul_http_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "{{ consul_tls_verify | ternary('true','false') }}"
 
 - name: Create read role
   ansible.builtin.command: >
@@ -38,7 +44,10 @@
     -policy-name read-policy
   when: "'read-role' not in role_list.stdout"
   run_once: true
-  environment: *consul_env
+  environment:
+    CONSUL_HTTP_ADDR: "{{ 'https' if consul_tls_enabled else 'http' }}://{{ consul_bind_addr }}:{{ consul_https_port if consul_tls_enabled else consul_http_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "{{ consul_tls_verify | ternary('true','false') }}"
 
 # ------------------------------------------------
 # APPLICATION TOKEN (NO DUPLICATES)
@@ -58,8 +67,11 @@
   register: app_token_output
   when: not app_token_stat.stat.exists
   run_once: true
-  environment: *consul_env
   no_log: true
+  environment:
+    CONSUL_HTTP_ADDR: "{{ 'https' if consul_tls_enabled else 'http' }}://{{ consul_bind_addr }}:{{ consul_https_port if consul_tls_enabled else consul_http_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "{{ consul_tls_verify | ternary('true','false') }}"
 
 - name: Save application token
   ansible.builtin.copy:
