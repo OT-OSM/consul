@@ -1,7 +1,7 @@
 galaxy_info:
-  author: your name
-  description: your role description
-  company: your company (optional)
+  author: Annem Anitha
+  description: Create consul cluster with any number of nodes
+  company: opstree
 
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value
