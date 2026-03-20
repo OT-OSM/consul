@@ -4,7 +4,6 @@
     dest: /etc/systemd/system/consul.service
     mode: "0644"
   notify:
-    - Reload systemd
     - Restart Consul
 
 - name: Enable and start Consul
