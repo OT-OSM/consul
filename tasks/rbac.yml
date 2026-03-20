@@ -11,10 +11,10 @@
   changed_when: false
   run_once: true
   environment: &consul_env
-    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:{{ consul_https_port }}"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
-    CONSUL_HTTP_SSL_VERIFY: "false"
+  CONSUL_HTTP_ADDR: >-
+    {{ 'https' if consul_tls_enabled else 'http' }}://{{ consul_bind_addr }}:{{ consul_https_port if consul_tls_enabled else consul_http_port }}
+  CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  CONSUL_HTTP_SSL_VERIFY: "{{ consul_tls_verify | ternary('true','false') }}"
 
 - name: Create read policy
   ansible.builtin.command: >
