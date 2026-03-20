@@ -36,8 +36,9 @@ acl {
 }
 
 ports {
-  http   = -1
-  https  = 8501
+  http  = {{ consul_http_port }}
+  https = {{ consul_https_port }}
+}
 }
 
 tls {
