@@ -256,6 +256,26 @@ Default UI URL:
 http://<server-ip>:8500
 ```
 
+## Vault Usage (IMPORTANT)
+
+Sensitive values like:
+
+- consul_master_token
+
+- consul_gossip_key
+
+are stored using Ansible Vault.
+
+### To Run Playbook:
+```
+ansible-playbook -i inventory.ini site.yml --ask-vault-pass
+```
+
+### OR using password file:
+```
+ansible-playbook -i inventory.ini site.yml --vault-password-file vault_pass.txt
+```
+
 ## 9. Best Practices Followed
 
 - Always use minimum 3 server nodes
