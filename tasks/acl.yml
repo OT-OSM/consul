@@ -43,6 +43,7 @@
   ansible.builtin.set_fact:
     consul_master_token: "{{ (consul_bootstrap.stdout | from_json).SecretID }}"
   run_once: true
+  no_log: true
   when:
     - consul_bootstrap.changed
     - consul_bootstrap.stdout | length > 0
@@ -52,6 +53,7 @@
 - name: Propagate token to all hosts
   ansible.builtin.set_fact:
     consul_master_token: "{{ hostvars[ansible_play_hosts[0]]['consul_master_token'] }}"
+  no_log: true
   when: consul_master_token is not defined or consul_master_token == ""
 
 # Save token
