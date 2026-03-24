@@ -131,3 +131,15 @@
     group: "{{ consul_group }}"
     mode: "0600"
   become: true
+
+####################################
+# Anonymous Token (Metrics Access)
+####################################
+
+- name: Allow Anonymous Token to read metrics
+  ansible.builtin.command: >
+    consul acl token update -id 00000000-0000-0000-0000-000000000002 
+    -description "Anonymous Token - Metrics Access"
+    -policy-name monitoring-policy
+  run_once: true
+  environment: *consul_env
