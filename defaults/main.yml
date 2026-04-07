@@ -40,3 +40,13 @@ consul_gossip_key: ""
 # Monitoring
 consul_telemetry_enabled: true
 consul_prometheus_retention: "60s"
+
+# Backup & DR Configuration
+consul_backup_enabled: true
+consul_backup_minio_endpoint: "{{ lookup('env', 'MINIO_Endpoint') }}"
+consul_backup_bucket: "consul-backups"
+consul_backups_to_keep_remote: 7
+
+# S3/MinIO backup credentials
+consul_backup_s3_access_key: "{{ lookup('env', 'MINIO_ROOT_USER') }}"
+consul_backup_s3_secret_key: "{{ lookup('env', 'MINIO_ROOT_PASSWORD') }}"
