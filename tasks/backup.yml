@@ -1,0 +1,43 @@
+---
+- name: Install MinIO Client (mc)
+  ansible.builtin.get_url:
+    url: https://dl.min.io/client/mc/release/linux-amd64/mc
+    dest: /usr/local/bin/mc
+    mode: '0755'
+  become: true
+
+- name: Configure mc alias
+  ansible.builtin.command:
+    cmd: "mc alias set dr-minio {{ consul_backup_minio_endpoint }} {{ consul_backup_access_key }} {{ consul_backup_secret_key }}"
+  changed_when: false
+  no_log: true
+
+- name: Set backup filename
+  ansible.builtin.set_fact:
+    consul_backup_name: "consul_v1_backup_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}.snap"
+
+- name: Take Consul Snapshot
+  ansible.builtin.command:
+    cmd: "consul snapshot save {{ consul_config_dir }}/{{ consul_backup_name }}"
+  environment:
+    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+  register: snapshot_result
+  run_once: true
+
+- name: Upload Snapshot to MinIO
+  ansible.builtin.command:
+    cmd: "mc cp {{ consul_config_dir }}/{{ consul_backup_name }} dr-minio/{{ consul_backup_bucket }}/"
+  when: snapshot_result.rc == 0
+  run_once: true
+
+- name: Cleanup local snapshot file
+  ansible.builtin.file:
+    path: "{{ consul_config_dir }}/{{ consul_backup_name }}"
+    state: absent
+
+- name: Remove old backups from MinIO
+  ansible.builtin.command:
+    cmd: "mc rm --recursive --older-than {{ consul_backups_to_keep_remote }}d dr-minio/{{ consul_backup_bucket }}/"
+  run_once: true
