@@ -9,7 +9,7 @@
 - name: Configure mc alias
   ansible.builtin.command:
     cmd: "mc alias set dr-minio {{ consul_backup_minio_endpoint }} {{ consul_backup_s3_access_key }} {{ consul_backup_s3_secret_key }}"
-  changed_when: false
+  become: true
   no_log: true
 
 - name: Set backup filename
