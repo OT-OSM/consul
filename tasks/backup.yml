@@ -8,7 +8,7 @@
 
 - name: Configure mc alias
   ansible.builtin.command:
-    cmd: "mc alias set dr-minio {{ consul_backup_minio_endpoint }} {{ consul_backup_access_key }} {{ consul_backup_secret_key }}"
+    cmd: "mc alias set dr-minio {{ consul_backup_minio_endpoint }} {{ consul_backup_s3_access_key }} {{ consul_backup_s3_secret_key }}"
   changed_when: false
   no_log: true
 
