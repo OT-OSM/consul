@@ -1,14 +1,14 @@
 ---
-- name: Install awscli via apt
+- name: Install AWS CLI (Try apt first with correct name)
   ansible.builtin.apt:
-    name: awscli
+    name: aws-cli
     state: present
     update_cache: true
   become: true
   register: apt_install
   ignore_errors: true
 
-- name: Install awscli via pip (fallback)
+- name: Install AWS CLI via pip (Fallback for missing packages)
   ansible.builtin.pip:
     name: awscli
     state: present
@@ -39,7 +39,7 @@
 
 - name: Upload backup to MinIO (S3)
   ansible.builtin.command: >
-    /usr/local/bin/aws s3 cp /tmp/consul-backups/{{ consul_backup_name }}.snap
+    aws s3 cp /tmp/consul-backups/{{ consul_backup_name }}.snap
     s3://{{ consul_backup_bucket }}/consul-backups/{{ consul_backup_name }}.snap
     --endpoint-url {{ consul_backup_minio_endpoint }}
     --no-verify-ssl
