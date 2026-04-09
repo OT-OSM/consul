@@ -44,7 +44,7 @@ consul_prometheus_retention: "60s"
 # Backup & DR Configuration
 consul_backup_enabled: true
 consul_backup_minio_endpoint: "{{ lookup('env', 'MINIO_Endpoint') }}"
-consul_backup_bucket: "consul-backups"
+consul_backup_bucket: "consul"
 consul_backups_to_keep_remote: 7
 
 # S3/MinIO backup credentials
