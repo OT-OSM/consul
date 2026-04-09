@@ -8,7 +8,6 @@
   register: apt_install
   ignore_errors: true
 
-# Fallback if apt fails: Install via pip with the break-system-packages flag
 - name: Install awscli via pip (fallback)
   ansible.builtin.pip:
     name: awscli
@@ -40,7 +39,7 @@
 
 - name: Upload backup to MinIO (S3)
   ansible.builtin.command: >
-    aws s3 cp /tmp/consul-backups/{{ consul_backup_name }}.snap
+    /usr/local/bin/aws s3 cp /tmp/consul-backups/{{ consul_backup_name }}.snap
     s3://{{ consul_backup_bucket }}/consul-backups/{{ consul_backup_name }}.snap
     --endpoint-url {{ consul_backup_minio_endpoint }}
     --no-verify-ssl
@@ -53,8 +52,7 @@
   until: upload_result.rc == 0
   run_once: true
   become: true
-  when:
-    - snapshot_result is succeeded
+  when: snapshot_result is succeeded
 
 - name: Delete local backup file
   ansible.builtin.file:
