@@ -1,6 +1,12 @@
 ---
-- name: Install awscli
+- name: Install pip3
   ansible.builtin.package:
+    name: python3-pip
+    state: present
+  become: true
+
+- name: Install awscli via pip
+  ansible.builtin.pip:
     name: awscli
     state: present
   become: true
@@ -24,6 +30,7 @@
     CONSUL_HTTP_SSL_VERIFY: "false"
   register: snapshot_result
   become: true
+  changed_when: snapshot_result.rc == 0
   when: consul_backup_enabled | bool
 
 - name: Upload backup to MinIO (S3)
@@ -41,9 +48,9 @@
   until: upload_result.rc == 0
   run_once: true
   become: true
-  when: 
+  when:
     - consul_backup_enabled | bool
-    - snapshot_result.rc == 0
+    - snapshot_result is succeeded
 
 - name: Delete local backup file
   ansible.builtin.file:
