@@ -55,7 +55,7 @@
 - name: Upload backup to MinIO (S3)
   ansible.builtin.command: >
     aws s3 cp /tmp/consul-backups/{{ consul_backup_name }}.snap
-    s3://{{ consul_backup_bucket }}/consul-backups/{{ consul_backup_name }}.snap
+    s3://{{ consul_backup_bucket }}/{{ consul_backup_name }}.snap
     --endpoint-url {{ consul_backup_minio_endpoint }}
     --no-verify-ssl
   environment:
