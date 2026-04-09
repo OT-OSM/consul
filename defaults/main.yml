@@ -43,7 +43,7 @@ consul_prometheus_retention: "60s"
 
 # Backup & DR Configuration
 consul_backup_enabled: true
-consul_backup_minio_endpoint: "http://minio.ldc.opstree.dev:8443"
+consul_backup_minio_endpoint: "https://minio.ldc.opstree.dev:8443"
 consul_backup_bucket: "consul"
 consul_backups_to_keep_remote: 7
 
