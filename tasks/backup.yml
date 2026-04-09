@@ -1,20 +1,35 @@
 ---
-- name: Install AWS CLI (Try apt first with correct name)
-  ansible.builtin.apt:
-    name: aws-cli
-    state: present
-    update_cache: true
-  become: true
-  register: apt_install
+- name: Check if AWS CLI is installed
+  ansible.builtin.command: aws --version
+  register: aws_check
   ignore_errors: true
+  changed_when: false
 
-- name: Install AWS CLI via pip (Fallback for missing packages)
-  ansible.builtin.pip:
-    name: awscli
-    state: present
-    extra_args: --break-system-packages
-  become: true
-  when: apt_install is failed
+- name: Install AWS CLI v2
+  block:
+    - name: Install unzip
+      ansible.builtin.package:
+        name: unzip
+        state: present
+      become: true
+
+    - name: Download AWS CLI v2 bundle
+      ansible.builtin.get_url:
+        url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+        dest: "/tmp/awscliv2.zip"
+        mode: '0644'
+
+    - name: Unarchive AWS CLI bundle
+      ansible.builtin.unarchive:
+        src: "/tmp/awscliv2.zip"
+        dest: "/tmp"
+        remote_src: true
+
+    - name: Run AWS CLI installation script
+      ansible.builtin.command:
+        cmd: "/tmp/aws/install --update"
+      become: true
+  when: aws_check.failed
 
 - name: Set backup name
   ansible.builtin.set_fact:
