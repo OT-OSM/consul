@@ -161,12 +161,18 @@
     AWS_ACCESS_KEY_ID: "{{ consul_backup_s3_access_key }}"
     AWS_SECRET_ACCESS_KEY: "{{ consul_backup_s3_secret_key }}"
     AWS_REGION: "us-east-1"
+    # Force path-style for MinIO compatibility
+    AWS_EC2_METADATA_DISABLED: "true" 
   register: upload_result
   retries: 3
   delay: 20
   until: upload_result.rc == 0
   when: snapshot_file.stat.exists
   become: true
+
+- name: Debug Upload Output
+  ansible.builtin.debug:
+    var: upload_result.stdout
 
 - name: Delete local backup file
   ansible.builtin.file:
