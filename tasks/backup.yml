@@ -1,15 +1,21 @@
 ---
-- name: Install pip3
-  ansible.builtin.package:
-    name: python3-pip
+- name: Install awscli via apt
+  ansible.builtin.apt:
+    name: awscli
     state: present
+    update_cache: true
   become: true
+  register: apt_install
+  ignore_errors: true
 
-- name: Install awscli via pip
+# Fallback if apt fails: Install via pip with the break-system-packages flag
+- name: Install awscli via pip (fallback)
   ansible.builtin.pip:
     name: awscli
     state: present
+    extra_args: --break-system-packages
   become: true
+  when: apt_install is failed
 
 - name: Set backup name
   ansible.builtin.set_fact:
@@ -31,7 +37,6 @@
   register: snapshot_result
   become: true
   changed_when: snapshot_result.rc == 0
-  when: consul_backup_enabled | bool
 
 - name: Upload backup to MinIO (S3)
   ansible.builtin.command: >
@@ -49,11 +54,9 @@
   run_once: true
   become: true
   when:
-    - consul_backup_enabled | bool
     - snapshot_result is succeeded
 
 - name: Delete local backup file
   ansible.builtin.file:
     path: "/tmp/consul-backups/{{ consul_backup_name }}.snap"
     state: absent
-  when: consul_backup_enabled | bool
