@@ -31,15 +31,21 @@
       become: true
   when: aws_check.failed
 
-- name: Set backup name
+- name: Set backup name (Fix: Use a single timestamp)
   ansible.builtin.set_fact:
-    consul_backup_name: "consul_backup_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+    # Defining it once here ensures the name doesn't change if the tasks take time
+    consul_backup_filename: "consul_backup_{{ ansible_date_time.iso8601_basic_short }}.snap"
 
 - name: Ensure backup directory exists
   ansible.builtin.file:
     path: /tmp/consul-backups
     state: directory
     mode: "0755"
+
+- name: Verify snapshot file exists before upload
+  ansible.builtin.stat:
+    path: "/tmp/consul-backups/{{ consul_backup_filename }}"
+  register: snapshot_file
 
 - name: Take Consul snapshot
   ansible.builtin.command:
@@ -52,22 +58,39 @@
   become: true
   changed_when: snapshot_result.rc == 0
 
+# - name: Upload backup to MinIO (S3)
+#   ansible.builtin.command: >
+#     aws s3 cp /tmp/consul-backups/{{ consul_backup_name }}.snap
+#     s3://{{ consul_backup_bucket }}/{{ consul_backup_name }}.snap
+#     --endpoint-url {{ consul_backup_minio_endpoint }}
+#     --no-verify-ssl
+#   environment:
+#     AWS_ACCESS_KEY_ID: "{{ consul_backup_s3_access_key }}"
+#     AWS_SECRET_ACCESS_KEY: "{{ consul_backup_s3_secret_key }}"
+#   register: upload_result
+#   retries: 3
+#   delay: 20
+#   until: upload_result.rc == 0
+#   run_once: true
+#   become: true
+#   when: snapshot_result is succeeded
 - name: Upload backup to MinIO (S3)
   ansible.builtin.command: >
-    aws s3 cp /tmp/consul-backups/{{ consul_backup_name }}.snap
-    s3://{{ consul_backup_bucket }}/{{ consul_backup_name }}.snap
+    aws s3 cp /tmp/consul-backups/{{ consul_backup_filename }}
+    s3://{{ consul_backup_bucket }}/{{ consul_backup_filename }}
     --endpoint-url {{ consul_backup_minio_endpoint }}
     --no-verify-ssl
   environment:
     AWS_ACCESS_KEY_ID: "{{ consul_backup_s3_access_key }}"
     AWS_SECRET_ACCESS_KEY: "{{ consul_backup_s3_secret_key }}"
+    AWS_REGION: "us-east-1" # AWS CLI often requires a region set, even for MinIO
   register: upload_result
   retries: 3
   delay: 20
   until: upload_result.rc == 0
-  run_once: true
+  # Only run if the file actually exists on this host
+  when: snapshot_file.stat.exists 
   become: true
-  when: snapshot_result is succeeded
 
 - name: Delete local backup file
   ansible.builtin.file:
