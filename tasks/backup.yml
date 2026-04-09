@@ -1,43 +1,49 @@
 ---
-- name: Install MinIO Client (mc)
-  ansible.builtin.get_url:
-    url: https://dl.min.io/client/mc/release/linux-amd64/mc
-    dest: /usr/local/bin/mc
-    mode: '0755'
+- name: Install awscli
+  ansible.builtin.package:
+    name: awscli
+    state: present
   become: true
 
-- name: Configure mc alias
-  ansible.builtin.command:
-    cmd: "mc alias set dr-minio {{ consul_backup_minio_endpoint }} {{ consul_backup_s3_access_key }} {{ consul_backup_s3_secret_key }}"
-  become: true
-  no_log: true
-
-- name: Set backup filename
+- name: Set backup name
   ansible.builtin.set_fact:
-    consul_backup_name: "consul_v1_backup_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}.snap"
+    consul_backup_name: "consul_backup_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
 
-- name: Take Consul Snapshot
-  ansible.builtin.command:
-    cmd: "consul snapshot save {{ consul_config_dir }}/{{ consul_backup_name }}"
-  environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_HTTP_SSL_VERIFY: "false"
-  register: snapshot_result
-  run_once: true
-
-- name: Upload Snapshot to MinIO
-  ansible.builtin.command:
-    cmd: "mc cp {{ consul_config_dir }}/{{ consul_backup_name }} dr-minio/{{ consul_backup_bucket }}/"
-  when: snapshot_result.rc == 0
-  run_once: true
-
-- name: Cleanup local snapshot file
+- name: Ensure backup directory exists
   ansible.builtin.file:
-    path: "{{ consul_config_dir }}/{{ consul_backup_name }}"
-    state: absent
+    path: /tmp/consul-backups
+    state: directory
+    mode: "0755"
 
-- name: Remove old backups from MinIO
+- name: Take Consul snapshot
   ansible.builtin.command:
-    cmd: "mc rm --recursive --older-than {{ consul_backups_to_keep_remote }}d dr-minio/{{ consul_backup_bucket }}/"
+    cmd: "consul snapshot save /tmp/consul-backups/{{ consul_backup_name }}.snap"
+  register: snapshot_result
+  become: true
+  changed_when: "'Saved' in (snapshot_result.stdout | default(''))"
+  when: consul_backup_enabled | bool
+
+- name: Upload backup to MinIO (S3)
+  ansible.builtin.command: >
+    aws s3 cp /tmp/consul-backups/{{ consul_backup_name }}.snap
+    s3://{{ consul_backup_bucket }}/consul-backups/{{ consul_backup_name }}.snap
+    --endpoint-url {{ consul_backup_minio_endpoint }}
+    --no-verify-ssl
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ consul_backup_s3_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ consul_backup_s3_secret_key }}"
+  register: upload_result
+  retries: 3
+  delay: 20
+  until: upload_result.rc == 0
   run_once: true
+  become: true
+  changed_when: upload_result.rc == 0
+  when:
+    - consul_backup_enabled | bool
+
+- name: Delete local backup file
+  ansible.builtin.file:
+    path: "/tmp/consul-backups/{{ consul_backup_name }}.snap"
+    state: absent
+  when: consul_backup_enabled | bool
