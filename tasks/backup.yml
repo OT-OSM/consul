@@ -1,50 +1,52 @@
 ---
-- name: Download consul-backup script
-  ansible.builtin.get_url:
-    url: "https://raw.githubusercontent.com/opstree/consul-backup/main/consul-backup.sh"
-    dest: /usr/local/bin/consul-backup
-    mode: "0755"
+- name: Install awscli
+  ansible.builtin.package:
+    name: awscli
+    state: present
   become: true
 
 - name: Set backup name
   ansible.builtin.set_fact:
-    consul_backup_name: "backup_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+    consul_backup_name: "consul_backup_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
 
-- name: Ensure config directory exists
+- name: Ensure backup directory exists
   ansible.builtin.file:
-    path: /etc/consul-backup
+    path: /tmp/consul-backups
     state: directory
-    owner: root
-    group: root
     mode: "0755"
-  become: true
 
-- name: Configure consul-backup
-  ansible.builtin.template:
-    src: consul-backup-config.yml.j2
-    dest: /etc/consul-backup/config.yml
-    owner: root
-    group: root
-    mode: "0640"
+- name: Take Consul snapshot
+  ansible.builtin.command:
+    cmd: "consul snapshot save /tmp/consul-backups/{{ consul_backup_name }}.snap"
+  environment:
+    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+  register: snapshot_result
   become: true
   when: consul_backup_enabled | bool
 
-- name: Create Consul backup
-  ansible.builtin.command:
-    cmd: "consul-backup create {{ consul_backup_name }}"
-  register: backup_create
-  become: true
-  changed_when: "'done' in (backup_create.stdout | default(''))"
-  when: consul_backup_enabled | bool
-
-- name: Upload backup to remote storage
-  ansible.builtin.command:
-    cmd: "consul-backup upload {{ consul_backup_name }} -v"
+- name: Upload backup to MinIO (S3)
+  ansible.builtin.command: >
+    aws s3 cp /tmp/consul-backups/{{ consul_backup_name }}.snap
+    s3://{{ consul_backup_bucket }}/consul-backups/{{ consul_backup_name }}.snap
+    --endpoint-url {{ consul_backup_minio_endpoint }}
+    --no-verify-ssl
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ consul_backup_s3_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ consul_backup_s3_secret_key }}"
   register: upload_result
   retries: 3
   delay: 20
   until: upload_result.rc == 0
   run_once: true
   become: true
-  changed_when: "'done' in (upload_result.stdout | default(''))"
+  when: 
+    - consul_backup_enabled | bool
+    - snapshot_result.rc == 0
+
+- name: Delete local backup file
+  ansible.builtin.file:
+    path: "/tmp/consul-backups/{{ consul_backup_name }}.snap"
+    state: absent
   when: consul_backup_enabled | bool
