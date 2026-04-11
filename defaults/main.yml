@@ -43,10 +43,10 @@ consul_prometheus_retention: "60s"
 
 # Backup & DR Configuration
 consul_backup_enabled: true
-consul_backup_minio_endpoint: "https://minio.ldc.opstree.dev:9000"
+consul_backup_minio_endpoint: "{{ lookup('env', 'MINIO_Endpoint') }}"
 consul_backup_bucket: "consul"
 consul_backups_to_keep_remote: 7
 
 # S3/MinIO backup credentials
-consul_backup_s3_access_key: "minioadmin"
-consul_backup_s3_secret_key: "opstreeadmin@2510"
+consul_backup_s3_access_key: "{{ lookup('env', 'MINIO_consul_accesskey') }}"
+consul_backup_s3_secret_key: "{{ lookup('env', 'MINIO_consul_secretkey') }}"
