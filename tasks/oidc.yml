@@ -16,7 +16,6 @@
     CONSUL_HTTP_SSL_VERIFY: "false"
   run_once: true
   register: jwt_method_out
-  # Use failed_when to ignore the error if it already exists
   failed_when: 
     - jwt_method_out.rc != 0 
     - "'already exists' not in jwt_method_out.stderr"
@@ -24,10 +23,10 @@
 - name: Create Binding Rule for JWT Users
   ansible.builtin.command: >
     consul acl binding-rule create
-    -method "keycloak"
-    -bind-type "policy"
-    -bind-name "readonly-policy"
-    -selector ""
+    -method="keycloak"
+    -bind-type="policy"
+    -bind-name="readonly-policy"
+    -selector=""
   environment:
     CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
