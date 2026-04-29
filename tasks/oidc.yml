@@ -26,7 +26,7 @@
     -method "keycloak"
     -bind-type "policy"
     -bind-name "readonly-policy"
-    -selector "true"
+    -selector "value.sub != ''"
   environment:
     CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
