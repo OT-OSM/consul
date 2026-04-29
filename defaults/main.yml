@@ -36,14 +36,20 @@ consul_client_addr: "0.0.0.0"
 
 # SSO / OIDC Configuration
 consul_oidc_enabled: true
-consul_public_url: "https://consul.opstree.dev" # Matches your Keycloak Home URL
-keycloak_url: "https://keycloak.opstree.dev"
+consul_public_url: "https://opstree.dev"
+keycloak_url: "https://opstree.dev"
 keycloak_realm: "master"
 
-# Use the Client ID and Secret from your Keycloak console
+# Keycloak Client Credentials
 consul_oidc_client_id: "consul"
 consul_oidc_client_secret: "r2kGOxYip1srrwhxiqRIAXv4bFaJroo3"
 
+# OIDC Specifics
+consul_oidc_max_token_ttl: "1h"
+consul_oidc_redirect_uris:
+  - "{{ consul_public_url }}/ui/oidc/callback"
+  - "http://localhost:8550/oidc/callback"
+  
 # Gossip Encryption
 consul_gossip_key: ""
 
