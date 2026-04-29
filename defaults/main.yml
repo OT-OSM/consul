@@ -50,3 +50,14 @@ consul_backups_to_keep_remote: 7
 # S3/MinIO backup credentials
 consul_backup_s3_access_key: "{{ lookup('env', 'MINIO_consul_accesskey') }}"
 consul_backup_s3_secret_key: "{{ lookup('env', 'MINIO_consul_secretkey') }}"
+
+
+# SSO / OIDC Configuration
+consul_oidc_enabled: true
+consul_public_url: "https://consul.opstree.dev" # Matches your Keycloak Home URL
+keycloak_url: "https://keycloak.opstree.dev"
+keycloak_realm: "master"
+
+# Use the Client ID and Secret from your Keycloak console
+consul_oidc_client_id: "consul"
+consul_oidc_client_secret: "gDshZG8hRy9CBX5Vg8kXZiOsQil89NCN"
