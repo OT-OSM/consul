@@ -19,3 +19,7 @@
 - name: Include Backup tasks
   ansible.builtin.include_tasks: backup.yml
   when: consul_backup_enabled | bool
+
+- name: Include OIDC SSO tasks
+  ansible.builtin.include_tasks: oidc.yml
+  when: consul_oidc_enabled | bool
