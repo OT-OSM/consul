@@ -1,0 +1,39 @@
+---
+- name: Create Keycloak OIDC Auth Method
+  ansible.builtin.command: >
+    consul acl auth-method create
+    -name "keycloak"
+    -type "oidc"
+    -description "SSO via Keycloak"
+    -config '{
+      "AllowedRedirectURIs": ["{{ consul_public_url }}/ui/oidc/callback"],
+      "OIDCDiscoveryURL": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
+      "OIDCClientID": "{{ consul_oidc_client_id }}",
+      "OIDCClientSecret": "{{ consul_oidc_client_secret }}"
+    }'
+  environment:
+    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+  run_once: true
+  register: oidc_method_out
+  failed_when: 
+    - oidc_method_out.rc != 0 
+    - "'already exists' not in oidc_method_out.stderr"
+
+- name: Create Binding Rule for SSO Users
+  ansible.builtin.command: >
+    consul acl binding-rule create
+    -method "keycloak"
+    -bind-type "policy"
+    -bind-name "readonly-policy"
+    -selector "true"
+  environment:
+    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+  run_once: true
+  register: binding_rule_out
+  failed_when:
+    - binding_rule_out.rc != 0
+    - "'already exists' not in binding_rule_out.stderr"
