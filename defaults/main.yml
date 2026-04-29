@@ -42,7 +42,7 @@ keycloak_realm: "master"
 
 # Use the Client ID and Secret from your Keycloak console
 consul_oidc_client_id: "consul"
-consul_oidc_client_secret: "gDshZG8hRy9CBX5Vg8kXZiOsQil89NCN"
+consul_oidc_client_secret: "r2kGOxYip1srrwhxiqRIAXv4bFaJroo3"
 
 # Gossip Encryption
 consul_gossip_key: ""
