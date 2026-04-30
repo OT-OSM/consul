@@ -11,7 +11,6 @@
   ignore_errors: true
   run_once: true
 
-
 # ✅ Step 2: Create ONLY if it does not exist
 - name: Create Keycloak OIDC Auth Method
   ansible.builtin.command: >
@@ -21,9 +20,11 @@
     -description "SSO via Keycloak"
     -max-token-ttl="{{ consul_oidc_max_token_ttl }}"
     -config '{
-      "OIDCDiscoveryURL": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
+      "OIDCDiscoveryURL": "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}",
+      "BoundIssuer": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
       "OIDCClientID": "{{ consul_oidc_client_id }}",
       "OIDCClientSecret": "{{ consul_oidc_client_secret }}",
+      "OIDCInsecureTLS": {{ consul_oidc_insecure_tls | lower }},
       "AllowedRedirectURIs": {{ consul_oidc_redirect_uris | to_json }},
       "ClaimMappings": {
         "preferred_username": "username"
@@ -37,11 +38,9 @@
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_HTTP_SSL_VERIFY: "false"
   run_once: true
-  register: oidc_method_out
   when: auth_method_check.rc != 0
 
-
-# ✅ Step 3: Update ONLY allowed fields (FIXED)
+# ✅ Step 3: Update WITH all required fields to fix the 522 redirect/timeout
 - name: Update Keycloak OIDC Auth Method
   ansible.builtin.command: >
     consul acl auth-method update
@@ -49,7 +48,12 @@
     -description "SSO via Keycloak"
     -max-token-ttl="{{ consul_oidc_max_token_ttl }}"
     -config '{
-      "OIDCDiscoveryURL": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
+      "OIDCDiscoveryURL": "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}",
+      "BoundIssuer": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
+      "OIDCClientID": "{{ consul_oidc_client_id }}",
+      "OIDCClientSecret": "{{ consul_oidc_client_secret }}",
+      "OIDCInsecureTLS": {{ consul_oidc_insecure_tls | lower }},
+      "AllowedRedirectURIs": {{ consul_oidc_redirect_uris | to_json }},
       "ClaimMappings": {
         "preferred_username": "username"
       },
@@ -64,9 +68,8 @@
   run_once: true
   when: auth_method_check.rc == 0
 
-
 # ✅ Step 4: Create Binding Rule (idempotent)
-- name: Create Binding Rule for JWT Users
+- name: Create Binding Rule for SSO Users
   ansible.builtin.command: >
     consul acl binding-rule create
     -method="keycloak"
