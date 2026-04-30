@@ -25,7 +25,6 @@
     - existing_method.json.Type == 'jwt'
 
 # ✅ Step 3: Create or Update the OIDC Auth Method
-# Changed to PUT and added the name to the URL to fix the 405 error
 - name: Upsert Keycloak OIDC Auth Method via API
   ansible.builtin.uri:
     url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
@@ -43,14 +42,18 @@
         OIDCClientID: "{{ consul_oidc_client_id }}"
         OIDCClientSecret: "{{ consul_oidc_client_secret }}"
         OIDCInsecureTLS: true
-        AllowedRedirectURIs: "{{ consul_oidc_redirect_uris }}"
+        # Fix 1: Explicitly wrap the redirect URI in a list
+        AllowedRedirectURIs: 
+          - "{{ consul_oidc_redirect_uris }}"
+        # Fix 2: Add BoundAudiences (required by many OIDC providers)
+        BoundAudiences:
+          - "{{ consul_oidc_client_id }}"
         ClaimMappings:
           preferred_username: "username"
         ListClaimMappings:
           groups: "groups"
-    status_code: [200, 201, 204, 200]
+    status_code: [200, 201, 204]
   run_once: true
-
 # ✅ Step 4: Create Binding Rule
 - name: Create Binding Rule for SSO Users
   ansible.builtin.command: >
