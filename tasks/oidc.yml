@@ -1,12 +1,35 @@
 ---
-- name: Upsert Keycloak OIDC Auth Method via API
+# ✅ Step 1: Check if the existing method is JWT (to prevent 500 error on Type change)
+- name: Check current Keycloak auth method type
   ansible.builtin.uri:
-    # Pointing directly to the method name (/keycloak) performs an idempotent PUT
-    url: "https://127.0.0.1:{{ consul_https_port }}/v1/acl/auth-method/keycloak"
-    method: PUT
+    url: "http://127.0.0"
+    method: GET
     headers:
       X-Consul-Token: "{{ consul_master_token }}"
-    validate_certs: false
+    status_code: [200, 404]
+  register: existing_method
+  run_once: true
+
+# ✅ Step 2: Delete if it is NOT OIDC (Consul cannot update Type in-place)
+- name: Delete existing JWT method to allow OIDC creation
+  ansible.builtin.uri:
+    url: "http://127.0.0"
+    method: DELETE
+    headers:
+      X-Consul-Token: "{{ consul_master_token }}"
+    status_code: [200, 204]
+  run_once: true
+  when: 
+    - existing_method.status == 200
+    - existing_method.json.Type != 'oidc'
+
+# ✅ Step 3: Create/Update the OIDC Auth Method
+- name: Upsert Keycloak OIDC Auth Method via API
+  ansible.builtin.uri:
+    url: "http://127.0.0"
+    method: POST
+    headers:
+      X-Consul-Token: "{{ consul_master_token }}"
     body_format: json
     body:
       Name: "keycloak"
@@ -19,16 +42,16 @@
         OIDCClientID: "{{ consul_oidc_client_id }}"
         OIDCClientSecret: "{{ consul_oidc_client_secret }}"
         OIDCInsecureTLS: true
-        # Client ID must be in the audiences list for validation
         BoundAudiences: ["{{ consul_oidc_client_id }}"]
         AllowedRedirectURIs: "{{ consul_oidc_redirect_uris }}"
         ClaimMappings:
           preferred_username: "username"
         ListClaimMappings:
           groups: "groups"
-    status_code: [200, 201, 204]
+    status_code: [200, 201]
   run_once: true
 
+# ✅ Step 4: Create Binding Rule
 - name: Create Binding Rule for SSO Users
   ansible.builtin.command: >
     consul acl binding-rule create
@@ -37,9 +60,8 @@
     -bind-name="readonly-policy"
     -selector="list.groups contains /consul-users"
   environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
+    CONSUL_HTTP_ADDR: "http://127.0.0.1:8500"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_HTTP_SSL_VERIFY: "false"
   run_once: true
   register: binding_rule_out
   failed_when:
