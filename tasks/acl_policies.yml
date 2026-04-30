@@ -1,0 +1,50 @@
+---
+- name: List existing policies via Envoy TLS
+  ansible.builtin.command: consul acl policy list
+  register: existing_policies
+  run_once: true
+  become: true
+  environment:
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
+    CONSUL_TLS_SERVER_NAME: "{{ consul_tls_server_name }}"
+    CONSUL_HTTP_SSL_VERIFY: "{{ consul_tls_verify | ternary('true','false') }}"
+  when: consul_tls_enabled
+
+- name: Copy policy files
+  ansible.builtin.template:
+    src: "policies/{{ item }}.hcl.j2"
+    dest: "/tmp/{{ item }}.hcl"
+    mode: "0644"
+  loop:
+    - agent-policy
+    - service-policy
+    - readonly-policy
+    - monitoring-policy
+
+- name: Create Consul policies
+  ansible.builtin.command: >
+    consul acl policy create
+    -name {{ item }}
+    -rules @/tmp/{{ item }}.hcl
+  loop:
+    - agent-policy
+    - service-policy
+    - readonly-policy
+    - monitoring-policy
+  when:
+    - consul_tls_enabled
+    - item not in existing_policies.stdout
+  run_once: true
+  become: true
+  environment:
+    CONSUL_HTTP_ADDR: "https://{{ consul_bind_addr }}:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_CACERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_CLIENT_CERT: "{{ consul_config_dir }}/certs/tls.crt"
+    CONSUL_CLIENT_KEY: "{{ consul_config_dir }}/certs/tls.key"
+    CONSUL_TLS_SERVER_NAME: "{{ consul_tls_server_name }}"
+    CONSUL_HTTP_SSL_VERIFY: "{{ consul_tls_verify | ternary('true','false') }}"

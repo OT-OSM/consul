@@ -1,0 +1,16 @@
+[Unit]
+Description=Consul Agent
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+User={{ consul_user }}
+Group={{ consul_group }}
+ExecStart={{ consul_install_dir }}/consul agent -config-dir={{ consul_config_dir }}
+ExecReload=/bin/kill -HUP $MAINPID
+KillSignal=SIGINT
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

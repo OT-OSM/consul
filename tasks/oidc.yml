@@ -1,0 +1,65 @@
+---
+# ✅ Step 1: Check if the existing method exists
+- name: Check current Keycloak auth method
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
+    method: GET
+    headers:
+      X-Consul-Token: "{{ consul_master_token }}"
+    status_code: [200, 404]
+  register: existing_method
+  run_once: true
+
+# ✅ Step 2: Delete ONLY if it is not the correct configuration
+- name: Delete existing method if not jwt
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
+    method: DELETE
+    headers:
+      X-Consul-Token: "{{ consul_master_token }}"
+    status_code: [200, 204]
+  run_once: true
+  when: 
+    - existing_method.status == 200
+    - existing_method.json.Type != 'jwt'
+
+# ✅ Step 3: Create or Update the JWT Auth Method (Updated for UI Visibility)
+- name: Upsert Keycloak JWT Auth Method via API
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
+    method: PUT
+    headers:
+      X-Consul-Token: "{{ consul_master_token }}"
+    body_format: json
+    body:
+      Name: "keycloak"
+      Type: "jwt"
+      Description: "JWT Auth via Keycloak"
+      Config:
+        JWKSURL: "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/certs"
+        BoundIssuer: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
+        JWTSupportedAlgs: ["RS256"]
+        BoundAudiences: ["{{ consul_oidc_client_id }}"]
+        ClaimMappings:
+          preferred_username: "username"
+        ListClaimMappings:
+          groups: "groups"
+    status_code: [200, 201, 204]
+  run_once: true
+
+# ✅ Step 4: Create Binding Rule for SSO Users
+- name: Create Binding Rule for SSO Users
+  ansible.builtin.command: >
+    consul acl binding-rule create
+    -method="keycloak"
+    -bind-type="role"
+    -bind-name="readonly-role"
+    -selector='list.groups contains "consul-users"'
+  environment:
+    CONSUL_HTTP_ADDR: "http://127.0.0.1:8500"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+  run_once: true
+  register: binding_rule_out
+  failed_when:
+    - binding_rule_out.rc != 0
+    - "'already exists' not in binding_rule_out.stderr"

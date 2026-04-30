@@ -1,5 +1,25 @@
 ---
+- name: Include installation tasks
+  ansible.builtin.include_tasks: install.yml
+  
+- name: Include configuration tasks
+  ansible.builtin.include_tasks: config.yml
 
-- name: Include OS Specific setup file
-  when: ansible_os_family == "Debian"
-  include: consul-Debian.yml
+- name: Include service tasks
+  ansible.builtin.include_tasks: service.yml
+
+- name: Include ACL tasks
+  ansible.builtin.include_tasks: acl.yml
+  when: consul_acl_enabled
+
+- name: Include RBAC tasks
+  ansible.builtin.include_tasks: rbac.yml
+  when: consul_acl_enabled
+
+- name: Include Backup tasks
+  ansible.builtin.include_tasks: backup.yml
+  when: consul_backup_enabled | bool
+
+- name: Include OIDC SSO tasks
+  ansible.builtin.include_tasks: oidc.yml
+  when: consul_oidc_enabled | bool

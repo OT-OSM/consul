@@ -1,0 +1,90 @@
+---
+- name: Check if AWS CLI is installed
+  ansible.builtin.command: aws --version
+  register: aws_check
+  ignore_errors: true
+  changed_when: false
+
+- name: Install AWS CLI v2
+  block:
+    - name: Install unzip
+      ansible.builtin.package:
+        name: unzip
+        state: present
+      become: true
+
+    - name: Download AWS CLI v2 bundle
+      ansible.builtin.get_url:
+        url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+        dest: "/tmp/awscliv2.zip"
+        mode: '0644'
+
+    - name: Unarchive AWS CLI bundle
+      ansible.builtin.unarchive:
+        src: "/tmp/awscliv2.zip"
+        dest: "/tmp"
+        remote_src: true
+
+    - name: Run AWS CLI installation script
+      ansible.builtin.command:
+        cmd: "/tmp/aws/install --update"
+      become: true
+  when: aws_check.failed
+
+- name: "Set backup constants"
+  ansible.builtin.set_fact:
+    consul_backup_dir: "/var/backups/consul"
+    consul_backup_filename: "consul_backup_{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}.snap"
+
+- name: Ensure secure backup directory exists
+  ansible.builtin.file:
+    path: "{{ consul_backup_dir }}"
+    state: directory
+    owner: "{{ consul_user | default('consul') }}"
+    group: "{{ consul_group | default('consul') }}"
+    mode: "0700"
+  become: true
+
+- name: Take Consul snapshot
+  ansible.builtin.command:
+    cmd: "consul snapshot save {{ consul_backup_dir }}/{{ consul_backup_filename }}"
+  environment:
+    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+  register: snapshot_result
+  become: true
+  changed_when: snapshot_result.rc == 0
+
+- name: Verify snapshot file exists before upload
+  ansible.builtin.stat:
+    path: "{{ consul_backup_dir }}/{{ consul_backup_filename }}"
+  register: snapshot_file
+
+- name: Upload backup to MinIO (S3)
+  ansible.builtin.command: >
+    aws s3 cp {{ consul_backup_dir }}/{{ consul_backup_filename }}
+    s3://{{ consul_backup_bucket }}/{{ consul_backup_filename }}
+    --endpoint-url {{ consul_backup_minio_endpoint }}
+    --no-verify-ssl
+  environment:
+    AWS_ACCESS_KEY_ID: "{{ consul_backup_s3_access_key }}"
+    AWS_SECRET_ACCESS_KEY: "{{ consul_backup_s3_secret_key }}"
+    AWS_REGION: "us-east-1"
+    AWS_EC2_METADATA_DISABLED: "true" 
+  register: upload_result
+  retries: 3
+  delay: 20
+  until: upload_result.rc == 0
+  when: snapshot_file.stat.exists
+  become: true
+
+- name: Debug Upload Output
+  ansible.builtin.debug:
+    var: upload_result.stdout
+
+- name: Delete local backup file
+  ansible.builtin.file:
+    path: "{{ consul_backup_dir }}/{{ consul_backup_filename }}"
+    state: absent
+  when: upload_result is succeeded
