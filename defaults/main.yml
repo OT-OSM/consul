@@ -37,13 +37,17 @@ consul_client_addr: "0.0.0.0"
 ---
 # SSO / OIDC Configuration
 consul_oidc_enabled: true
-# Use specific subdomains if possible to avoid proxy loops
 consul_public_url: "https://consul.opstree.dev"
+
+# Internal URL for Consul-to-Keycloak communication (Bypasses Cloudflare)
+# Use the internal IP and port where Keycloak is actually listening
+keycloak_internal_url: "http://127.0.0.1:8080" 
+
+# Public URL for the Browser/UI
 keycloak_url: "https://keycloak.opstree.dev" 
 keycloak_realm: "master"
 
-# Toggle this to true if you are using self-signed certificates for Keycloak
-consul_oidc_insecure_tls: false 
+consul_oidc_insecure_tls: true # Set to true if using internal HTTP or self-signed certs
 
 # Keycloak Client Credentials
 consul_oidc_client_id: "consul"
@@ -54,6 +58,7 @@ consul_oidc_max_token_ttl: "1h"
 consul_oidc_redirect_uris:
   - "{{ consul_public_url }}/ui/oidc/callback"
   - "http://localhost:8550/oidc/callback"
+
 
   
 # Gossip Encryption
