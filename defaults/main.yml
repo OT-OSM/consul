@@ -39,7 +39,7 @@ consul_public_url: "https://opstree.dev"
 
 # Internal URL to bypass Cloudflare 522. Use 127.0.0.1 if Keycloak is on the same node.
 keycloak_internal_url: "http://192.168.8.30:8080" 
-keycloak_url: "https://opstree.dev" 
+keycloak_url: "http://192.168.8.30:8080" 
 keycloak_realm: "master"
 
 consul_oidc_client_id: "consul"
