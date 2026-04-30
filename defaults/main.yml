@@ -34,7 +34,6 @@ consul_agent_token: ""
 
 consul_client_addr: "0.0.0.0"
 
----
 consul_oidc_enabled: true
 consul_public_url: "https://opstree.dev"
 
