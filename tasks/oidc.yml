@@ -11,7 +11,6 @@
   run_once: true
 
 # ✅ Step 2: Delete ONLY if it is not the correct configuration
-# This ensures we can change the 'Type' from any failed attempts back to 'jwt'
 - name: Delete existing method if not jwt
   ansible.builtin.uri:
     url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
@@ -24,8 +23,7 @@
     - existing_method.status == 200
     - existing_method.json.Type != 'jwt'
 
-# ✅ Step 3: Create or Update the JWT Auth Method
-# Note: Using Type 'jwt' because your Consul logs show 'oidc' is not supported
+# ✅ Step 3: Create or Update the JWT Auth Method (Updated for UI Visibility)
 - name: Upsert Keycloak JWT Auth Method via API
   ansible.builtin.uri:
     url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
@@ -38,12 +36,17 @@
       Type: "jwt"
       Description: "JWT Auth via Keycloak"
       Config:
-        # JWT type requires manual JWKS URL instead of Discovery URL
         JWKSURL: "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/certs"
         BoundIssuer: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
         JWTSupportedAlgs: ["RS256"]
-        # Required for many JWT implementations to verify the target
         BoundAudiences: ["{{ consul_oidc_client_id }}"]
+        
+        # --- ADD THESE TWO LINES TO ENABLE THE UI LOGIN BUTTON ---
+        OIDCDiscoveryURL: "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}"
+        AllowedRedirectURIs: 
+          - "http://192.168.8.35:8500/ui/oidc/callback"
+        # ---------------------------------------------------------
+
         ClaimMappings:
           preferred_username: "username"
         ListClaimMappings:
