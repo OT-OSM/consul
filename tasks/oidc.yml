@@ -1,5 +1,4 @@
 ---
-# ✅ Step 1: Check if auth method already exists
 - name: Check if Keycloak auth method exists
   ansible.builtin.command: >
     consul acl auth-method read -name keycloak
@@ -11,26 +10,23 @@
   ignore_errors: true
   run_once: true
 
-# ✅ Step 2: Create ONLY if it does not exist
-- name: Create Keycloak OIDC Auth Method
+- name: Create or Update Keycloak OIDC Auth Method
   ansible.builtin.command: >
-    consul acl auth-method create
+    consul acl auth-method {{ 'update' if auth_method_check.rc == 0 else 'create' }}
     -name "keycloak"
     -type "oidc"
     -description "SSO via Keycloak"
     -max-token-ttl="{{ consul_oidc_max_token_ttl }}"
     -config '{
-      "OIDCDiscoveryURL": "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}",
-      "BoundIssuer": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
-      "OIDCClientID": "{{ consul_oidc_client_id }}",
-      "OIDCClientSecret": "{{ consul_oidc_client_secret }}",
-      "OIDCInsecureTLS": {{ consul_oidc_insecure_tls | lower }},
-      "AllowedRedirectURIs": {{ consul_oidc_redirect_uris | to_json }},
-      "ClaimMappings": {
-        "preferred_username": "username"
-      },
-      "ListClaimMappings": {
-        "groups": "groups"
+      "config": {
+        "OIDCDiscoveryURL": "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}",
+        "BoundIssuer": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
+        "OIDCClientID": "{{ consul_oidc_client_id }}",
+        "OIDCClientSecret": "{{ consul_oidc_client_secret }}",
+        "OIDCInsecureTLS": {{ consul_oidc_insecure_tls | lower }},
+        "AllowedRedirectURIs": {{ consul_oidc_redirect_uris | to_json }},
+        "ClaimMappings": { "preferred_username": "username" },
+        "ListClaimMappings": { "groups": "groups" }
       }
     }'
   environment:
@@ -38,38 +34,7 @@
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
     CONSUL_HTTP_SSL_VERIFY: "false"
   run_once: true
-  when: auth_method_check.rc != 0
-  
-# ✅ Step 3: Update WITH nested Config block (Required for 1.17.x)
-- name: Update Keycloak OIDC Auth Method
-  ansible.builtin.command: >
-    consul acl auth-method update
-    -name "keycloak"
-    -description "SSO via Keycloak"
-    -max-token-ttl="{{ consul_oidc_max_token_ttl }}"
-    -config '{
-      "OIDCDiscoveryURL": "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}",
-      "BoundIssuer": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
-      "OIDCClientID": "{{ consul_oidc_client_id }}",
-      "OIDCClientSecret": "{{ consul_oidc_client_secret }}",
-      "OIDCInsecureTLS": {{ consul_oidc_insecure_tls | lower }},
-      "AllowedRedirectURIs": {{ consul_oidc_redirect_uris | to_json }},
-      "ClaimMappings": {
-        "preferred_username": "username"
-      },
-      "ListClaimMappings": {
-        "groups": "groups"
-      }
-    }'
-  environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_HTTP_SSL_VERIFY: "false"
-  run_once: true
-  when: auth_method_check.rc == 0
 
-
-# ✅ Step 4: Create Binding Rule (idempotent)
 - name: Create Binding Rule for SSO Users
   ansible.builtin.command: >
     consul acl binding-rule create
