@@ -1,7 +1,6 @@
 ---
 - name: Upsert Keycloak OIDC Auth Method via API
   ansible.builtin.uri:
-    # Using the specific resource path (/keycloak) for an idempotent PUT
     url: "https://127.0.0.1:{{ consul_https_port }}/v1/acl/auth-method/keycloak"
     method: PUT
     headers:
@@ -12,21 +11,16 @@
       Name: "keycloak"
       Type: "oidc"
       Description: "SSO via Keycloak"
-      MaxTokenTTL: "{{ consul_oidc_max_token_ttl }}"
       Config:
-        # These URLs must exactly match the "issuer" from your curl output
-        OIDCDiscoveryURL: "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}"
-        BoundIssuer: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
+        # These MUST match your successful curl output exactly
+        OIDCDiscoveryURL: "http://192.168.8"
+        BoundIssuer: "http://192.168.8"
         OIDCClientID: "{{ consul_oidc_client_id }}"
         OIDCClientSecret: "{{ consul_oidc_client_secret }}"
         OIDCInsecureTLS: true
-        # Required: Consul 1.17.0 often needs the ClientID in BoundAudiences to validate
-        BoundAudiences: ["{{ consul_oidc_client_id }}"]
-        AllowedRedirectURIs: "{{ consul_oidc_redirect_uris }}"
-        ClaimMappings:
-          preferred_username: "username"
-        ListClaimMappings:
-          groups: "groups"
+        AllowedRedirectURIs:
+          - "https://opstree.dev"
+          - "http://localhost:8550/oidc/callback"
     status_code: [200, 201, 204]
   run_once: true
 
