@@ -1,4 +1,18 @@
 ---
+# ✅ Step 1: Check if auth method already exists
+- name: Check if Keycloak auth method exists
+  ansible.builtin.command: >
+    consul acl auth-method read -name keycloak
+  environment:
+    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+  register: auth_method_check
+  ignore_errors: true
+  run_once: true
+
+
+# ✅ Step 2: Create ONLY if it does not exist
 - name: Create Keycloak OIDC Auth Method
   ansible.builtin.command: >
     consul acl auth-method create
@@ -24,11 +38,37 @@
     CONSUL_HTTP_SSL_VERIFY: "false"
   run_once: true
   register: oidc_method_out
-  # rc 1 logic ensures the task doesn't fail if already configured
-  failed_when: 
-    - oidc_method_out.rc != 0 
-    - "'already exists' not in oidc_method_out.stderr"
+  when: auth_method_check.rc != 0
 
+
+# ✅ Step 3: Update if it already exists
+- name: Update Keycloak OIDC Auth Method
+  ansible.builtin.command: >
+    consul acl auth-method update
+    -name "keycloak"
+    -description "SSO via Keycloak"
+    -max-token-ttl="{{ consul_oidc_max_token_ttl }}"
+    -config '{
+      "OIDCDiscoveryURL": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
+      "OIDCClientID": "{{ consul_oidc_client_id }}",
+      "OIDCClientSecret": "{{ consul_oidc_client_secret }}",
+      "AllowedRedirectURIs": {{ consul_oidc_redirect_uris | to_json }},
+      "ClaimMappings": {
+        "preferred_username": "username"
+      },
+      "ListClaimMappings": {
+        "groups": "groups"
+      }
+    }'
+  environment:
+    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
+    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
+    CONSUL_HTTP_SSL_VERIFY: "false"
+  run_once: true
+  when: auth_method_check.rc == 0
+
+
+# ✅ Step 4: Create binding rule (safe handling)
 - name: Create Binding Rule for JWT Users
   ansible.builtin.command: >
     consul acl binding-rule create
