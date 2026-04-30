@@ -39,8 +39,8 @@
     CONSUL_HTTP_SSL_VERIFY: "false"
   run_once: true
   when: auth_method_check.rc != 0
-
-# ✅ Step 3: Update WITH all required fields to fix the 522 redirect/timeout
+  
+# ✅ Step 3: Update WITH nested Config block (Required for 1.17.x)
 - name: Update Keycloak OIDC Auth Method
   ansible.builtin.command: >
     consul acl auth-method update
@@ -67,6 +67,7 @@
     CONSUL_HTTP_SSL_VERIFY: "false"
   run_once: true
   when: auth_method_check.rc == 0
+
 
 # ✅ Step 4: Create Binding Rule (idempotent)
 - name: Create Binding Rule for SSO Users
