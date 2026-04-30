@@ -1,5 +1,5 @@
 ---
-# ✅ Step 1: Check if the existing method exists (using your working URL)
+# ✅ Step 1: Check if the existing method exists
 - name: Check current Keycloak auth method
   ansible.builtin.uri:
     url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
@@ -10,7 +10,7 @@
   register: existing_method
   run_once: true
 
-# ✅ Step 2: Delete if it is "jwt" (Must do this to change Type to "oidc")
+# ✅ Step 2: Delete if it is "jwt"
 - name: Delete existing JWT method
   ansible.builtin.uri:
     url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
@@ -41,7 +41,8 @@
         OIDCClientID: "{{ consul_oidc_client_id }}"
         OIDCClientSecret: "{{ consul_oidc_client_secret }}"
         OIDCInsecureTLS: true
-        AllowedRedirectURIs: {{ consul_oidc_redirect_uris }}
+        # Quotes added here to fix the YAML syntax error
+        AllowedRedirectURIs: "{{ consul_oidc_redirect_uris }}"
         ClaimMappings:
           preferred_username: "username"
         ListClaimMappings:
