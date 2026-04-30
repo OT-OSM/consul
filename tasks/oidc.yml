@@ -58,12 +58,13 @@
     -method="keycloak"
     -bind-type="policy"
     -bind-name="readonly-policy"
-    -selector="list.groups contains consul-users"
+    -selector='list.groups contains "consul-users"'
   environment:
     CONSUL_HTTP_ADDR: "http://127.0.0.1:8500"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
   run_once: true
   register: binding_rule_out
+  # This part stays the same to handle idempotency
   failed_when:
     - binding_rule_out.rc != 0
     - "'already exists' not in binding_rule_out.stderr"
