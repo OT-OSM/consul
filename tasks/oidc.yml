@@ -1,19 +1,9 @@
 ---
-- name: Check if Keycloak auth method exists
-  ansible.builtin.command: >
-    consul acl auth-method read -name keycloak
-  environment:
-    CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
-    CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
-    CONSUL_HTTP_SSL_VERIFY: "false"
-  register: auth_method_check
-  ignore_errors: true
-  run_once: true
-
-- name: Create or Update Keycloak OIDC Auth Method via API
+- name: Upsert Keycloak OIDC Auth Method via API
   ansible.builtin.uri:
-    url: "https://127.0.0.1:{{ consul_https_port }}/v1/acl/auth-method"
-    method: "{{ 'PUT' if auth_method_check.rc == 0 else 'POST' }}"
+    # PUT to the resource name (/keycloak) handles both create and update
+    url: "https://127.0.0.1:{{ consul_https_port }}/v1/acl/auth-method/keycloak"
+    method: PUT
     headers:
       X-Consul-Token: "{{ consul_master_token }}"
     validate_certs: false
@@ -34,7 +24,7 @@
           preferred_username: "username"
         ListClaimMappings:
           groups: "groups"
-    status_code: [200, 201]
+    status_code: [200, 201, 204]
   run_once: true
 
 - name: Create Binding Rule for SSO Users
