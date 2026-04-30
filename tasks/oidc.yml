@@ -40,13 +40,6 @@
         BoundIssuer: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
         JWTSupportedAlgs: ["RS256"]
         BoundAudiences: ["{{ consul_oidc_client_id }}"]
-        
-        # --- ADD THESE TWO LINES TO ENABLE THE UI LOGIN BUTTON ---
-        OIDCDiscoveryURL: "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}"
-        AllowedRedirectURIs: 
-          - "http://192.168.8.35:8500/ui/oidc/callback"
-        # ---------------------------------------------------------
-
         ClaimMappings:
           preferred_username: "username"
         ListClaimMappings:
