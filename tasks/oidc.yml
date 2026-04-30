@@ -17,8 +17,7 @@
     {% if auth_method_check.rc != 0 %}-type "oidc"{% endif %}
     -description "SSO via Keycloak"
     -max-token-ttl="{{ consul_oidc_max_token_ttl }}"
-    -config '{
-      "Config": {
+    -config='{
         "OIDCDiscoveryURL": "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}",
         "BoundIssuer": "{{ keycloak_url }}/realms/{{ keycloak_realm }}",
         "OIDCClientID": "{{ consul_oidc_client_id }}",
@@ -27,7 +26,6 @@
         "AllowedRedirectURIs": {{ consul_oidc_redirect_uris | to_json }},
         "ClaimMappings": { "preferred_username": "username" },
         "ListClaimMappings": { "groups": "groups" }
-      }
     }'
   environment:
     CONSUL_HTTP_ADDR: "https://127.0.0.1:{{ consul_https_port }}"
