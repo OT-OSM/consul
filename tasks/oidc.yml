@@ -28,15 +28,14 @@
         BoundIssuer: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
         OIDCClientID: "{{ consul_oidc_client_id }}"
         OIDCClientSecret: "{{ consul_oidc_client_secret }}"
-        OIDCInsecureTLS: {{ consul_oidc_insecure_tls | bool }}
-        AllowedRedirectURIs: {{ consul_oidc_redirect_uris }}
+        OIDCInsecureTLS: "{{ consul_oidc_insecure_tls | bool }}"
+        AllowedRedirectURIs: "{{ consul_oidc_redirect_uris }}"
         ClaimMappings:
           preferred_username: "username"
         ListClaimMappings:
           groups: "groups"
-    status_code: [200, 201]
+    status_code: [200, 201, 204]
   run_once: true
-
 
 - name: Create Binding Rule for SSO Users
   ansible.builtin.command: >
