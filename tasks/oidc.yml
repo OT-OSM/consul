@@ -1,8 +1,8 @@
 ---
-# ✅ Step 1: Check if the existing method is JWT (to prevent 500 error on Type change)
-- name: Check current Keycloak auth method type
+# ✅ Step 1: Check if the existing method exists (using your working URL)
+- name: Check current Keycloak auth method
   ansible.builtin.uri:
-    url: "http://127.0.0"
+    url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
     method: GET
     headers:
       X-Consul-Token: "{{ consul_master_token }}"
@@ -10,10 +10,10 @@
   register: existing_method
   run_once: true
 
-# ✅ Step 2: Delete if it is NOT OIDC (Consul cannot update Type in-place)
-- name: Delete existing JWT method to allow OIDC creation
+# ✅ Step 2: Delete if it is "jwt" (Must do this to change Type to "oidc")
+- name: Delete existing JWT method
   ansible.builtin.uri:
-    url: "http://127.0.0"
+    url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
     method: DELETE
     headers:
       X-Consul-Token: "{{ consul_master_token }}"
@@ -21,12 +21,12 @@
   run_once: true
   when: 
     - existing_method.status == 200
-    - existing_method.json.Type != 'oidc'
+    - existing_method.json.Type == 'jwt'
 
-# ✅ Step 3: Create/Update the OIDC Auth Method
-- name: Upsert Keycloak OIDC Auth Method via API
+# ✅ Step 3: Create the OIDC Auth Method
+- name: Create Keycloak OIDC Auth Method via API
   ansible.builtin.uri:
-    url: "http://127.0.0"
+    url: "http://127.0.0.1:8500/v1/acl/auth-method"
     method: POST
     headers:
       X-Consul-Token: "{{ consul_master_token }}"
@@ -35,20 +35,18 @@
       Name: "keycloak"
       Type: "oidc"
       Description: "SSO via Keycloak"
-      MaxTokenTTL: "{{ consul_oidc_max_token_ttl }}"
       Config:
         OIDCDiscoveryURL: "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}"
         BoundIssuer: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
         OIDCClientID: "{{ consul_oidc_client_id }}"
         OIDCClientSecret: "{{ consul_oidc_client_secret }}"
         OIDCInsecureTLS: true
-        BoundAudiences: ["{{ consul_oidc_client_id }}"]
-        AllowedRedirectURIs: "{{ consul_oidc_redirect_uris }}"
+        AllowedRedirectURIs: {{ consul_oidc_redirect_uris }}
         ClaimMappings:
           preferred_username: "username"
         ListClaimMappings:
           groups: "groups"
-    status_code: [200, 201]
+    status_code: [200, 201, 204]
   run_once: true
 
 # ✅ Step 4: Create Binding Rule
@@ -58,7 +56,7 @@
     -method="keycloak"
     -bind-type="policy"
     -bind-name="readonly-policy"
-    -selector="list.groups contains /consul-users"
+    -selector="list.groups contains consul-users"
   environment:
     CONSUL_HTTP_ADDR: "http://127.0.0.1:8500"
     CONSUL_HTTP_TOKEN: "{{ consul_master_token }}"
