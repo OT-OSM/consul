@@ -10,9 +10,9 @@
   register: existing_method
   run_once: true
 
-# ✅ Step 2: Delete ONLY if it is "jwt" 
-# (This clears the path for the OIDC type)
-- name: Delete existing JWT method
+# ✅ Step 2: Delete ONLY if it is not the correct configuration
+# This ensures we can change the 'Type' from any failed attempts back to 'jwt'
+- name: Delete existing method if not jwt
   ansible.builtin.uri:
     url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
     method: DELETE
@@ -22,10 +22,11 @@
   run_once: true
   when: 
     - existing_method.status == 200
-    - existing_method.json.Type == 'jwt'
+    - existing_method.json.Type != 'jwt'
 
-# ✅ Step 3: Create or Update the OIDC Auth Method
-- name: Upsert Keycloak OIDC Auth Method via API
+# ✅ Step 3: Create or Update the JWT Auth Method
+# Note: Using Type 'jwt' because your Consul logs show 'oidc' is not supported
+- name: Upsert Keycloak JWT Auth Method via API
   ansible.builtin.uri:
     url: "http://127.0.0.1:8500/v1/acl/auth-method/keycloak"
     method: PUT
@@ -34,27 +35,23 @@
     body_format: json
     body:
       Name: "keycloak"
-      Type: "oidc"
-      Description: "SSO via Keycloak"
+      Type: "jwt"
+      Description: "JWT Auth via Keycloak"
       Config:
-        OIDCDiscoveryURL: "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}"
+        # JWT type requires manual JWKS URL instead of Discovery URL
+        JWKSURL: "{{ keycloak_internal_url }}/realms/{{ keycloak_realm }}/protocol/openid-connect/certs"
         BoundIssuer: "{{ keycloak_url }}/realms/{{ keycloak_realm }}"
-        OIDCClientID: "{{ consul_oidc_client_id }}"
-        OIDCClientSecret: "{{ consul_oidc_client_secret }}"
-        OIDCInsecureTLS: true
-        # Fix 1: Explicitly wrap the redirect URI in a list
-        AllowedRedirectURIs: 
-          - "{{ consul_oidc_redirect_uris }}"
-        # Fix 2: Add BoundAudiences (required by many OIDC providers)
-        BoundAudiences:
-          - "{{ consul_oidc_client_id }}"
+        JWTSupportedAlgs: ["RS256"]
+        # Required for many JWT implementations to verify the target
+        BoundAudiences: ["{{ consul_oidc_client_id }}"]
         ClaimMappings:
           preferred_username: "username"
         ListClaimMappings:
           groups: "groups"
     status_code: [200, 201, 204]
   run_once: true
-# ✅ Step 4: Create Binding Rule
+
+# ✅ Step 4: Create Binding Rule for SSO Users
 - name: Create Binding Rule for SSO Users
   ansible.builtin.command: >
     consul acl binding-rule create
