@@ -1,7 +1,17 @@
 datacenter = "{{ datacenter }}"
+
 data_dir = "{{ consul_data_dir }}"
+
 encrypt = "{{ hostvars[groups['consul-leader'][0]].encr_key.stdout }}"
+
 retry_join = ["{{ hostvars[groups['consul-leader'][0]].ip_leader }}"]
+
+client_addr = "0.0.0.0"
+
+ui_config {
+  enabled = true
+}
+
 performance {
     raft_multiplier = {{ raft_mul }}
 }

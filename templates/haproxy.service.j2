@@ -1,0 +1,16 @@
+[Unit]
+Description=Consul Template
+After=network.target consul.service
+
+[Service]
+Type=simple
+
+ExecStart={{ consul_template_binary }} \
+  -config={{ consul_template_config_dir }} \
+  -template "{{ consul_template_config_dir }}/haproxy.ctmpl:{{ haproxy_cfg }}:systemctl reload haproxy"
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

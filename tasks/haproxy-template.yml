@@ -1,0 +1,34 @@
+---
+
+- name: Create consul-template directory
+  file:
+    path: "{{ consul_template_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install consul-template binary
+  get_url:
+    url: "https://releases.hashicorp.com/consul-template/{{ consul_template_version }}/consul-template_{{ consul_template_version }}_linux_amd64.zip"
+    dest: /tmp/consul-template.zip
+
+- name: Install unzip consul-template
+  unarchive:
+    src: /tmp/consul-template.zip
+    dest: /usr/local/bin
+    remote_src: true
+
+- name: Create haproxy consul-template configuration
+  template:
+    src: haproxy.ctmpl.j2
+    dest: "{{ consul_template_config_dir }}/haproxy.ctmpl"
+
+- name: Create consul-template service
+  template:
+    src: haproxy.service.j2
+    dest: /etc/systemd/system/consul-template.service
+
+  notify:
+    - daemon_reload
+    - restart_consul_template

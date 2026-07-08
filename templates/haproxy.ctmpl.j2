@@ -1,0 +1,15 @@
+global
+    daemon
+
+defaults
+    mode http
+    timeout connect 5s
+    timeout client 50s
+    timeout server 50s
+
+
+backend keycloak
+
+{{ range service "keycloak" }}
+    server {{ .Node }} {{ .Address }}:8080 check
+{{ end }}

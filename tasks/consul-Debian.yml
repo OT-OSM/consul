@@ -71,3 +71,9 @@
   notify:
     - daemon_reload
     - restart_consul
+
+- name: Configure consul-template HAProxy integration
+  include_tasks: haproxy-template.yml
+  when:
+    - consul_enable_haproxy_template
+    - (group_names[0] == "consul-leader") or (group_names[0] == "consul-server")

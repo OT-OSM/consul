@@ -14,3 +14,9 @@
   service:
     name: consul
     state: stopped
+
+- name: restart_consul_template
+  systemd:
+    name: consul-template
+    enabled: true
+    state: restarted

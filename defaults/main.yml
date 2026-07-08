@@ -35,3 +35,14 @@ kill_mode: process
 restart: on-failure
 limit_file: 65536
 wanted_by: multi-user.target
+
+# Optional consul-template integration
+consul_enable_haproxy_template: false
+
+consul_template_version: "0.37.0"
+
+consul_template_binary: "/usr/local/bin/consul-template"
+
+consul_template_config_dir: "/etc/consul-template"
+
+haproxy_cfg: "/etc/haproxy/haproxy.cfg"
