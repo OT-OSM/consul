@@ -7,9 +7,12 @@ defaults
     timeout client 50s
     timeout server 50s
 
+{% for svc in consul_haproxy_services %}
 
-backend keycloak
+backend {{ svc.name }}
 
-{{ range service "keycloak" }}
-    server {{ .Node }} {{ .Address }}:8080 check
-{{ end }}
+{{ "{{" }} range service "{{ svc.name }}" {{ "}}" }}
+    server {{ "{{" }} .Node {{ "}}" }} {{ "{{" }} .Address {{ "}}" }}:{{ "{{" }} .Port {{ "}}" }} check
+{{ "{{" }} end {{ "}}" }}
+
+{% endfor %}
