@@ -37,7 +37,6 @@ limit_file: 65536
 wanted_by: multi-user.target
 
 # Optional consul-template integration
-consul_enable_haproxy_template: false
 
 consul_template_version: "0.39.1"
 
