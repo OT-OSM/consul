@@ -1,1 +1,19 @@
+[Unit]
+Description=Consul Template
+Documentation=https://github.com/hashicorp/consul-template
+Requires=consul.service
+After=network.target consul.service
 
+[Service]
+Type=simple
+User={{ consul_owner }}
+Group={{ consul_group }}
+
+ExecStart={{ consul_template_binary }} \
+  -config={{ consul_template_config_dir }}/config.hcl
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
