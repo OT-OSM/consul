@@ -1,19 +1,14 @@
-
 consul {
   address = "{{ consul_template_consul_address }}"
 }
 
 
-{% for service in haproxy_services %}
-
 template {
 
-  source = "{{ consul_template_config_dir }}/{{ service.name }}.cfg.ctmpl"
+  source = "{{ consul_template_config_dir }}/haproxy.ctmpl"
 
   destination = "{{ haproxy_config_file }}"
 
   command = "systemctl reload haproxy"
 
 }
-
-{% endfor %}
