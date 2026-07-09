@@ -1,0 +1,9 @@
+---
+
+- name: Check Consul members
+  command: consul members
+  register: consul_members
+
+- name: Display Consul cluster
+  debug:
+    var: consul_members.stdout
