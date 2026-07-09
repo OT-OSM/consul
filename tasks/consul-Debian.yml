@@ -74,9 +74,3 @@
 
 - name: Validate Consul cluster
   include_tasks: validate.yml    
-
-- name: Configure consul-template HAProxy integration
-  include_tasks: haproxy-template.yml
-  when:
-    - consul_enable_haproxy_template
-    - (group_names[0] == "consul-leader") or (group_names[0] == "consul-server")
