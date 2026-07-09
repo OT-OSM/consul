@@ -1,18 +1,41 @@
 global
     daemon
+    maxconn 4096
+
 
 defaults
     mode http
     timeout connect 5s
-    timeout client 50s
-    timeout server 50s
+    timeout client 60s
+    timeout server 60s
 
-{% for svc in consul_haproxy_services %}
 
-backend {{ svc.name }}
+frontend http_front
 
-{{ "{{" }} range service "{{ svc.name }}" {{ "}}" }}
+    bind *:{{ haproxy_frontend_port }}
+
+
+{% for service in haproxy_services %}
+
+    acl host_{{ service.name }} hdr(host) -i {{ service.domain }}
+
+    use_backend {{ service.name }}_backend if host_{{ service.name }}
+
+{% endfor %}
+
+
+
+{% for service in haproxy_services %}
+
+backend {{ service.name }}_backend
+
+    balance roundrobin
+
+{{ "{{" }} range service "{{ service.name }}" {{ "}}" }}
+
     server {{ "{{" }} .Node {{ "}}" }} {{ "{{" }} .Address {{ "}}" }}:{{ "{{" }} .Port {{ "}}" }} check
+
 {{ "{{" }} end {{ "}}" }}
+
 
 {% endfor %}
