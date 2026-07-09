@@ -1,9 +1,17 @@
 ---
 
-- name: Check Consul members
-  command: consul members
-  register: consul_members
+- name: Check Consul leader
+  command: consul operator raft list-peers
+  register: consul_peers
+  changed_when: false
 
-- name: Display Consul cluster
+
+- name: Show Consul peers
   debug:
-    var: consul_members.stdout
+    var: consul_peers.stdout
+
+
+- name: Check Consul DNS port
+  wait_for:
+    port: 8600
+    timeout: 10
