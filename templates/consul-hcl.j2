@@ -4,7 +4,11 @@ data_dir = "{{ consul_data_dir }}"
 
 encrypt = "{{ hostvars[groups['consul-leader'][0]].encr_key.stdout }}"
 
-retry_join = ["{{ hostvars[groups['consul-leader'][0]].ip_leader }}"]
+retry_join = [
+{% for host in groups['consul_servers'] %}
+"{{ hostvars[host].ansible_host }}",
+{% endfor %}
+]
 
 client_addr = "0.0.0.0"
 
@@ -13,5 +17,5 @@ ui_config {
 }
 
 performance {
-    raft_multiplier = {{ raft_mul }}
+  raft_multiplier = {{ raft_mul }}
 }
