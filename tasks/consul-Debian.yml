@@ -72,6 +72,9 @@
     - daemon_reload
     - restart_consul
 
+- name: Validate Consul cluster
+  include_tasks: validate.yml    
+
 - name: Configure consul-template HAProxy integration
   include_tasks: haproxy-template.yml
   when:
