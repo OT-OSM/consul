@@ -12,13 +12,14 @@ retry_join = [
 
 client_addr = "0.0.0.0"
 
+ports {
+  dns = 8600
+}
+
 ui_config {
   enabled = true
 }
 
 performance {
   raft_multiplier = {{ raft_mul }}
-}
-ports {
-  dns = 8600
 }
