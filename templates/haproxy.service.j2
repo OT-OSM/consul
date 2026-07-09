@@ -1,16 +1,15 @@
 [Unit]
-Description=Consul Template
-After=network.target consul.service
+Description=HAProxy Load Balancer
+After=network.target
 
 [Service]
-Type=simple
+Type=notify
 
-ExecStart={{ consul_template_binary }} \
-  -config={{ consul_template_config_dir }} \
-  -template "{{ consul_template_config_dir }}/haproxy.ctmpl:{{ haproxy_cfg }}:systemctl reload haproxy"
+ExecStart=/usr/sbin/haproxy -f {{ haproxy_config_file }}
+
+ExecReload=/bin/kill -USR2 $MAINPID
 
 Restart=always
-RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
