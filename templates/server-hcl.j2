@@ -1,3 +1,10 @@
 server = true
 
 bootstrap_expect = {{ consul_bootstrap_expect | default(3) }}
+
+ports {
+  grpc = 8502
+  dns  = 8600
+}
+
+raft_protocol = 3
