@@ -1,6 +1,6 @@
 ---
 # consul binary
-consul_binary_url: https://releases.hashicorp.com/consul/1.7.2/consul_1.7.2_linux_amd64.zip
+consul_binary_url: https://releases.hashicorp.com/consul/1.17.0/consul_1.17.0_linux_amd64.zip
 
 # consul persistent storage
 consul_data_dir: /opt/consul
