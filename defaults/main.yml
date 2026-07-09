@@ -36,11 +36,8 @@ restart: on-failure
 limit_file: 65536
 wanted_by: multi-user.target
 
-# Optional consul-template HAProxy integration
-
+# Optional consul-template integration
 consul_enable_haproxy_template: false
-
-consul_template_enabled: false
 
 consul_template_version: "0.39.1"
 
@@ -51,29 +48,28 @@ consul_template_config_dir: "/etc/consul-template"
 
 # HAProxy configuration
 
-haproxy_cfg: "/etc/haproxy/haproxy.cfg"
+haproxy_enabled: false
+
+haproxy_config_file: "/etc/haproxy/haproxy.cfg"
+
+haproxy_frontend_port: 80
 
 
-# Generic HAProxy services
-# Add new services here or override from inventory/group_vars
+# Load balanced services
+# This is generic.
+# Add/remove services without changing templates.
 
 haproxy_services: []
-
-
 
 # Example:
 #
 # haproxy_services:
-#
 #   - name: keycloak
-#     domain: keycloak.company.com
+#     domain: keycloak.example.com
 #
 #   - name: minio
-#     domain: minio.company.com
-#
-#   - name: postgres
-#     domain: postgres.company.com
-#
+#     domain: minio.example.com
+
 
 
 # DNS Management
@@ -83,3 +79,14 @@ consul_dns_enabled: true
 dns_domain: ""
 
 dns_records: []
+
+# Example:
+#
+# dns_domain: example.com
+#
+# dns_records:
+#   - name: keycloak
+#     ip: 10.0.0.10
+#
+#   - name: minio
+#     ip: 10.0.0.10
