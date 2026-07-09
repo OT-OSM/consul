@@ -2,4 +2,18 @@
 
 - name: Include OS Specific setup file
   when: ansible_os_family == "Debian"
-  include: consul-Debian.yml
+  include_tasks: consul-Debian.yml
+
+
+- name: Configure DNS management
+  when:
+    - consul_dns_enabled
+    - ansible_os_family == "Debian"
+  include_tasks: dns.yml
+
+
+- name: Configure HAProxy consul-template integration
+  when:
+    - haproxy_enabled
+    - ansible_os_family == "Debian"
+  include_tasks: haproxy-template.yml
