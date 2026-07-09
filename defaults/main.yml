@@ -36,13 +36,50 @@ restart: on-failure
 limit_file: 65536
 wanted_by: multi-user.target
 
-# Optional consul-template integration
+# Optional consul-template HAProxy integration
+
 consul_enable_haproxy_template: false
 
-consul_template_version: "0.37.0"
+consul_template_enabled: false
+
+consul_template_version: "0.39.1"
 
 consul_template_binary: "/usr/local/bin/consul-template"
 
 consul_template_config_dir: "/etc/consul-template"
 
+
+# HAProxy configuration
+
 haproxy_cfg: "/etc/haproxy/haproxy.cfg"
+
+
+# Generic HAProxy services
+# Add new services here or override from inventory/group_vars
+
+haproxy_services: []
+
+
+
+# Example:
+#
+# haproxy_services:
+#
+#   - name: keycloak
+#     domain: keycloak.company.com
+#
+#   - name: minio
+#     domain: minio.company.com
+#
+#   - name: postgres
+#     domain: postgres.company.com
+#
+
+
+# DNS Management
+
+consul_dns_enabled: true
+
+dns_domain: ""
+
+dns_records: []
