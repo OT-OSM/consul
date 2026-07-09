@@ -1,1 +1,41 @@
+---
 
+- name: Install BIND
+  apt:
+    name:
+      - bind9
+      - bind9utils
+    state: present
+    update_cache: yes
+
+
+- name: Create DNS directory
+  file:
+    path: /etc/bind/zones
+    state: directory
+    owner: root
+    group: bind
+    mode: "0755"
+
+
+- name: Configure DNS zone
+  template:
+    src: dns-zone.db.j2
+    dest: "/etc/bind/zones/{{ dns_domain }}.db"
+  when:
+    - dns_domain != ""
+
+
+- name: Configure named zone
+  template:
+    src: named-zone.conf.j2
+    dest: /etc/bind/named.conf.local
+  when:
+    - dns_domain != ""
+
+
+- name: Restart bind
+  systemd:
+    name: bind9
+    state: restarted
+    enabled: yes
