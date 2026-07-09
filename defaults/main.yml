@@ -45,6 +45,8 @@ consul_template_binary: "/usr/local/bin/consul-template"
 
 consul_template_config_dir: "/etc/consul-template"
 
+consul_template_consul_address: "127.0.0.1:8500"
+
 
 # HAProxy configuration
 
