@@ -49,7 +49,7 @@ consul_template_consul_address: "127.0.0.1:8500"
 
 # HAProxy configuration
 
-haproxy_enabled: false
+haproxy_enabled: true
 
 haproxy_config_file: "/etc/haproxy/haproxy.cfg"
 
