@@ -1,0 +1,25 @@
+---
+
+- name: Check Consul API connectivity
+  uri:
+    url: "{{ consul_http_addr }}/v1/status/leader"
+    return_content: yes
+  register: consul_status
+
+
+- name: Display Consul leader
+  debug:
+    msg: "Consul leader: {{ consul_status.content }}"
+
+
+- name: Check Consul catalog API
+  uri:
+    url: "{{ consul_http_addr }}/v1/catalog/services"
+    return_content: yes
+  register: consul_catalog
+
+
+- name: Display registered services
+  debug:
+    var: consul_catalog.content
+

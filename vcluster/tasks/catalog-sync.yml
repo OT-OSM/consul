@@ -1,0 +1,14 @@
+---
+
+- name: Check Consul service catalog
+  uri:
+    url: "{{ consul_http_addr }}/v1/catalog/services"
+    return_content: yes
+  register: consul_services
+
+
+- name: Display Consul services
+  debug:
+    var: consul_services.content
+
+

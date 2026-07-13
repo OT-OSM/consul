@@ -1,0 +1,13 @@
+---
+
+- name: Configure Consul integration
+  include_tasks: consul-integration.yml
+
+
+- name: Configure catalog sync
+  include_tasks: catalog-sync.yml
+
+
+- name: Validate integration
+  include_tasks: validation.yml
+

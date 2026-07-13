@@ -1,0 +1,24 @@
+---
+
+- name: Validate Consul health
+  uri:
+    url: "{{ consul_http_addr }}/v1/status/leader"
+    return_content: yes
+  register: leader
+
+
+- name: Show Consul leader
+  debug:
+    var: leader.content
+
+
+- name: Validate vCluster service registration
+  uri:
+    url: "{{ consul_http_addr }}/v1/catalog/service/{{ vcluster_name }}-vcluster-api"
+    return_content: yes
+  register: vcluster_service
+
+
+- name: Show vCluster service
+  debug:
+    var: vcluster_service.content

@@ -1,0 +1,16 @@
+---
+
+consul_server_host: 172.31.17.75
+
+consul_server_port: 8500
+
+consul_http_addr: "http://{{ consul_server_host }}:{{ consul_server_port }}"
+
+consul_catalog_api: "{{ consul_http_addr }}/v1/catalog/services"
+
+vcluster_namespaces:
+  - coe-dev
+  - bp-dev
+  - coe-prod
+  - bp-prod
+
